@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cliente | Plataforma Logística</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Colores corporativos basados en la referencia NAVINTER */
+        .text-corporate { color: #0a407e; }
+        .bg-corporate { background-color: #0a407e; }
+        .border-corporate { border-color: #0a407e; }
+        .btn-outline { border: 1px solid #0a407e; color: #0a407e; }
+        .btn-outline:hover { background-color: #f0f7ff; }
+    </style>
+</head>
+<body class="bg-white min-h-screen font-sans text-slate-800">
+
+    <!-- Encabezado Corporativo estilo NAVINTER -->
+    <header class="border-b border-gray-200 py-4 px-8 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm">
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-corporate rounded-full flex items-center justify-center text-white font-bold text-xl">B</div>
+            <div>
+                <h1 class="text-xl font-light text-corporate tracking-wider">BRIZO</h1>
+                <p class="text-[10px] text-gray-500 uppercase tracking-widest">Plataforma Logística</p>
+            </div>
+        </div>
+        
+        <nav class="hidden md:flex gap-6 text-sm font-medium text-gray-700">
+            <a href="#" class="hover:text-corporate">¿Quiénes Somos?</a>
+            <a href="#" class="hover:text-corporate">¿Por qué elegirnos?</a>
+            <a href="#" class="hover:text-corporate">Clientes</a>
+            <a href="#" class="hover:text-corporate">Ubicaciones</a>
+            <a href="#" class="text-corporate font-bold">Subastas</a>
+        </nav>
+
+        <div class="flex gap-4 items-center">
+            <span class="text-sm text-gray-500 hidden lg:block">📞 +502 2302 7600</span>
+            <button class="btn-outline px-4 py-2 rounded text-sm font-medium transition-colors">Identificarse</button>
+            <button class="bg-corporate hover:bg-blue-900 text-white px-4 py-2 rounded text-sm font-medium transition-colors">Contáctenos</button>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="max-w-6xl mx-auto p-8 mt-8">
+        
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-corporate mb-2">Subasta de Espacios Marítimos</h2>
+            <p class="text-gray-600">Participe en tiempo real por la asignación de espacios en nuestro buque insignia.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Panel de Selección y Puja -->
+            <div class="lg:col-span-1 border border-corporate border-t-4 p-6 bg-white shadow-sm">
+                <h3 class="text-xl font-bold text-corporate mb-6 text-center" id="nombreBuque">Buque: Cargando...</h3>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">1. Seleccione el Espacio</label>
+                    <select id="selectContenedor" class="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-800 focus:border-blue-800 outline-none transition-all">
+                        <option value="">Cargando espacios...</option>
+                    </select>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">2. Ingrese su Oferta (USD)</label>
+                    <input type="number" id="montoPuja" placeholder="$ 0.00" class="w-full px-4 py-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-800 focus:border-blue-800 outline-none text-lg font-medium text-corporate">
+                </div>
+
+                <button onclick="enviarPuja()" class="w-full bg-corporate hover:bg-blue-900 text-white py-3 rounded font-bold text-lg transition-colors shadow-md">
+                    Emitir Oferta Oficial
+                </button>
+
+                <div class="mt-4 text-center">
+                    <span id="status" class="inline-flex items-center gap-2 text-sm text-gray-500">
+                        <span class="w-2 h-2 rounded-full bg-gray-400" id="statusDot"></span> Esperando conexión...
+                    </span>
+                </div>
+            </div>
+
+            <!-- Panel de Resultados en Tiempo Real -->
+            <div class="lg:col-span-2 border border-gray-200 p-6 bg-gray-50 shadow-sm flex flex-col">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Registro de Transacciones en Vivo</h3>
+                
+                <!-- Terminal más limpia y corporativa -->
+                <div id="terminal" class="flex-1 bg-white border border-gray-200 rounded p-4 h-[400px] overflow-y-auto font-mono text-sm space-y-2">
+                    <!-- Logs -->
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        const terminal = document.getElementById('terminal');
+        const statusEl = document.getElementById('status');
+        const statusDot = document.getElementById('statusDot');
+        let ws;
+
+        // Cargar datos del buque
+        async function cargarBuque() {
+            try {
+                const res = await fetch('http://localhost:3001/api/buque');
+                const data = await res.json();
+                
+                document.getElementById('nombreBuque').textContent = `Buque: ${data.buque}`;
+                
+                const select = document.getElementById('selectContenedor');
+                select.innerHTML = '<option value="" disabled selected>Elija un contenedor...</option>';
+                data.contenedores.forEach(c => {
+                    select.innerHTML += `<option value="${c.id}">${c.id} - ${c.tipo} (Base: $${c.base})</option>`;
+                });
+            } catch (error) {
+                console.error("Error al cargar datos del puerto.");
+            }
+        }
+
+        function conectarWebSocket() {
+            ws = new WebSocket('ws://localhost:3001/subasta-en-vivo');
+
+            ws.onopen = () => {
+                statusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Conectado al servidor de subastas';
+            };
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                
+                // Formato de log corporativo
+                const time = new Date().toLocaleTimeString();
+                
+                if (data.alerta) {
+                    terminal.innerHTML += `
+                        <div class="p-3 border-l-4 border-red-500 bg-red-50 text-red-800 rounded shadow-sm">
+                            <strong class="text-red-600">[${time}] ${data.contenedorId}</strong> - ${data.mensaje}
+                        </div>`;
+                } else {
+                    terminal.innerHTML += `
+                        <div class="p-2 border-b border-gray-100 flex justify-between hover:bg-gray-50">
+                            <span class="text-gray-500">[${time}] <strong class="text-corporate">${data.contenedorId}</strong></span>
+                            <span class="font-bold text-green-700">$${data.monto}</span>
+                        </div>`;
+                }
+                terminal.scrollTop = terminal.scrollHeight;
+            };
+
+            ws.onclose = () => {
+                statusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span> Conexión perdida';
+            };
+        }
+
+        function enviarPuja() {
+            const contenedorId = document.getElementById('selectContenedor').value;
+            const monto = document.getElementById('montoPuja').value;
+            
+            if (!contenedorId) return alert('Por favor, seleccione un espacio primero.');
+            if (!monto) return alert('Por favor, ingrese un monto.');
+            
+            // Enviamos un objeto JSON con contenedor y monto
+            ws.send(JSON.stringify({ contenedorId, monto }));
+            
+            document.getElementById('montoPuja').value = '';
+        }
+
+        // Inicializar
+        cargarBuque();
+        conectarWebSocket();
+    </script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrador | Brizo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .text-corporate { color: #0a407e; }
+        .bg-corporate { background-color: #0a407e; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans text-slate-800">
+
+    <!-- Encabezado Corporativo (Versión Admin - Dark) -->
+    <header class="border-b border-gray-800 py-4 px-8 flex justify-between items-center bg-slate-900 shadow-md">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-white rounded flex items-center justify-center text-slate-900 font-bold text-xl">B</div>
+            <div>
+                <h1 class="text-xl font-light text-white tracking-wider">BRIZO</h1>
+                <p class="text-[10px] text-gray-400 uppercase tracking-widest">Dashboard Global Administrativo</p>
+            </div>
+        </div>
+        <button onclick="cargarMetricas()" class="text-xs text-gray-300 hover:text-white flex items-center gap-1 border border-gray-700 px-3 py-1 rounded">
+            <span>↻</span> Refrescar Métricas
+        </button>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-8 mt-2">
+        
+        <!-- KPIs (Métricas Globales) -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white p-6 rounded shadow-sm border-l-4 border-l-blue-500">
+                <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Módulo Subastas</div>
+                <div class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-green-500"></div> Operativo (3001)
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded shadow-sm border-l-4 border-l-red-500">
+                <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Módulo Aduanas</div>
+                <div class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-green-500"></div> Aislado (3002)
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded shadow-sm border-l-4 border-l-corporate">
+                <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Total Ofertas Emitidas</div>
+                <div class="text-3xl font-bold text-corporate" id="totalOfertas">0</div>
+            </div>
+            <div class="bg-white p-6 rounded shadow-sm border-l-4 border-l-red-600">
+                <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Intervenciones Aduaneras</div>
+                <div class="text-3xl font-bold text-red-600" id="totalBloqueadas">0</div>
+            </div>
+        </div>
+
+        <!-- Tabla de Auditoría y Seguridad -->
+        <div class="bg-white rounded shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-gray-50 border-b border-gray-200 p-4">
+                <h3 class="font-bold text-gray-800">Auditoría de Transacciones en Vivo</h3>
+            </div>
+            <table class="w-full text-sm text-left">
+                <thead class="text-xs text-gray-500 uppercase bg-gray-100 border-b border-gray-200">
+                    <tr>
+                        <th class="px-6 py-4">ID Transacción</th>
+                        <th class="px-6 py-4">Hora</th>
+                        <th class="px-6 py-4">Espacio / Contenedor</th>
+                        <th class="px-6 py-4">Monto (USD)</th>
+                        <th class="px-6 py-4">Estado del Sistema</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaAuditoria" class="divide-y divide-gray-100">
+                    <tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">Cargando registros...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        async function cargarMetricas() {
+            try {
+                // Hacemos fetch al mismo endpoint que usa el Auditor, pero lo usamos para analíticas
+               // Cambiamos /api/pujas por /api/todas-las-pujas
+                const res = await fetch('http://localhost:3001/api/todas-las-pujas');
+                // Nota: El backend actualmente filtra por 'activa', para el admin sería ideal ver todas.
+                // Como maqueta, usaremos los datos devueltos para simular las métricas.
+                const pujas = await res.json();
+                
+                const tabla = document.getElementById('tablaAuditoria');
+                tabla.innerHTML = '';
+                
+                let activas = 0;
+                let bloqueadas = 0;
+
+                if (pujas.length === 0) {
+                    tabla.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No hay transacciones registradas en esta sesión.</td></tr>';
+                    return;
+                }
+
+                pujas.reverse().forEach(p => {
+                    // Contadores
+                    if (p.estado === 'activa') activas++;
+                    if (p.estado === 'bloqueada') bloqueadas++;
+
+                    // Color del estado
+                    const badgeClass = p.estado === 'activa' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800';
+
+                    tabla.innerHTML += `
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 font-mono font-medium text-corporate">${p.id}</td>
+                            <td class="px-6 py-4 text-gray-500">${p.timestamp}</td>
+                            <td class="px-6 py-4 font-medium">${p.contenedorId}</td>
+                            <td class="px-6 py-4 font-bold text-gray-800">$${p.monto}</td>
+                            <td class="px-6 py-4">
+                                <span class="px-3 py-1 rounded text-xs font-bold uppercase tracking-wider ${badgeClass}">
+                                    ${p.estado}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById('totalOfertas').textContent = pujas.length;
+                // En esta maqueta el endpoint solo devuelve activas, pero dejamos la lógica lista
+                document.getElementById('totalBloqueadas').textContent = bloqueadas;
+
+            } catch (error) {
+                console.error("Error al conectar con los motores:", error);
+            }
+        }
+
+        // Cargar al inicio y refrescar cada 5 segundos
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarMetricas();
+            setInterval(cargarMetricas, 5000);
+        });
+    </script>
+</body>
+</html>

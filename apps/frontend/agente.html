@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Operativo | Brizo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .text-corporate { color: #0a407e; }
+        .bg-corporate { background-color: #0a407e; }
+        .border-corporate { border-color: #0a407e; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans text-slate-800">
+
+    <!-- Encabezado Corporativo -->
+    <header class="border-b border-gray-200 py-4 px-8 flex justify-between items-center bg-white shadow-sm">
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-corporate rounded-full flex items-center justify-center text-white font-bold text-xl">B</div>
+            <div>
+                <h1 class="text-xl font-light text-corporate tracking-wider">BRIZO</h1>
+                <p class="text-[10px] text-gray-500 uppercase tracking-widest">Control Operativo de Flota</p>
+            </div>
+        </div>
+        <div class="hidden md:flex items-center gap-2">
+            <span class="text-sm font-bold text-corporate uppercase tracking-wider">Agente en Turno</span>
+            <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">👤</div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-8 mt-4">
+        <h2 class="text-2xl font-bold text-corporate mb-6">Panel de Despacho y Atraques</h2>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Gestión del Buque -->
+            <div class="bg-white p-6 border border-gray-200 border-t-4 border-t-corporate shadow-sm">
+                <div class="flex justify-between items-center mb-6 border-b pb-4">
+                    <h3 class="text-lg font-bold text-gray-800" id="nombreBuque">Buque Insignia: Cargando...</h3>
+                    <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-bold rounded uppercase">Atracado</span>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Programar Salida / Vuelo</label>
+                        <input type="datetime-local" class="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-800 outline-none text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Publicar Evento Operativo</label>
+                        <select class="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-800 outline-none text-sm">
+                            <option>Apertura de Subastas - Fase 1</option>
+                            <option>Cierre de Recepción de Carga</option>
+                            <option>Inspección General Autorizada</option>
+                        </select>
+                    </div>
+                    <button class="w-full bg-corporate hover:bg-blue-900 text-white py-2 rounded font-bold transition-colors mt-2 text-sm">
+                        Confirmar y Publicar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Manifiesto de Carga (Lectura en vivo) -->
+            <div class="bg-white p-6 border border-gray-200 shadow-sm">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Espacios Habilitados (Manifiesto)</h3>
+                <ul id="listaContenedores" class="space-y-3">
+                    <li class="text-sm text-gray-500">Conectando con el puerto...</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        async function cargarDatosPuerto() {
+            try {
+                const res = await fetch('http://localhost:3001/api/buque');
+                const data = await res.json();
+                
+                document.getElementById('nombreBuque').textContent = `Buque: ${data.buque}`;
+                
+                const lista = document.getElementById('listaContenedores');
+                lista.innerHTML = '';
+                data.contenedores.forEach(c => {
+                    lista.innerHTML += `
+                        <li class="flex justify-between items-center p-3 bg-gray-50 border border-gray-100 rounded">
+                            <div class="flex flex-col">
+                                <span class="font-bold text-corporate">${c.id}</span>
+                                <span class="text-xs text-gray-500">${c.tipo}</span>
+                            </div>
+                            <span class="text-sm font-medium text-green-700">Base: $${c.base}</span>
+                        </li>
+                    `;
+                });
+            } catch (error) {
+                document.getElementById('listaContenedores').innerHTML = '<li class="text-red-500">Error de conexión.</li>';
+            }
+        }
+        document.addEventListener('DOMContentLoaded', cargarDatosPuerto);
+    </script>
+</body>
+</html> 
