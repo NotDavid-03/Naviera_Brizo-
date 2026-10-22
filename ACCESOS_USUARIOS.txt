@@ -1,0 +1,103 @@
+================================================================================
+                    BRIZO LOGISTICS - DIRECTORIO OFICIAL DE ACCESOS
+             Plataforma de Subastas Maritimas y Fiscalizacion Aduanera SAT
+================================================================================
+Ultima actualizacion: 2026-10-22T02:31:20.964Z
+Total de cuentas simplificadas: 60
+Formato de claves: Alfanumerico simple (letras y numeros, sin simbolos especiales)
+================================================================================
+
+--------------------------------------------------------------------------------
+PORTAL: CLIENTES (URL: http://localhost:3000/index.html -> Portal Clientes)
+Total: 50 cuentas | Rol: CLIENTE | Acceso: cliente.html
+-----------------------------------------------------------------------------------------------------------------------------
+USUARIO         CONTRASENA        PRESUPUESTO (USD)   EMPRESA / RAZON SOCIAL                    SECTOR / MERCANCIA
+-----------------------------------------------------------------------------------------------------------------------------
+asur            Asur345           $3,300.00 USD       Agroexportadora del Sur S.A.              Productos Agricolas y Frutas
+delta           delta453          $3,900.00 USD       Delta Logistica y Carga Maritima          Consolidacion y Fletes
+atlantis        Atlantis920       $3,550.00 USD       Importadora del Atlantico S.A.            Carga General y Manufactura
+caribe          caribe714         $2,600.00 USD       Logistica Maritima del Caribe Ltda.       Consolidacion de Carga
+farma           Farma628          $3,650.00 USD       Distribuidora Farmaceutica Central        Farmaceuticos y Medicamentos
+express         express519        $3,200.00 USD       Cargas y Consolidados Express             Paqueteria y Carga Ligera
+maya            Maya832           $2,600.00 USD       Cafe Maya Exportadores S.A.               Cafe Especial y Granos
+pacifico        pacifico405       $3,450.00 USD       Granos y Harinas del Pacifico             Granos a Granel y Harinas
+textil          Textil187         $3,350.00 USD       Textilera Panamericana S.A.               Textiles y Confecciones
+almacen         almacen692        $2,850.00 USD       Almacenes Generales y Logistica           Mercancia en Transito
+quimica         Quimica341        $2,800.00 USD       Quimicos Industriales de Occidente        Sustancias Quimicas IMO
+frigor          frigor850         $3,650.00 USD       Frigorificos del Norte S.A.               Carnicos y Mariscos Congelados
+aceros          Aceros276         $3,300.00 USD       Comercializadora de Aceros y Perfiles     Materiales de Construccion
+electro         electro943        $2,950.00 USD       Importadora Electronica Siglo XXI         Tecnologia y Electrodomesticos
+valle           Valle312          $3,750.00 USD       Bebidas y Concentrados del Valle          Liquidos y Concentrados
+tropico         tropico681        $3,150.00 USD       Exportadora Bananera del Tropico          Fruta Fresca Refrigerada
+motores         Motores524        $3,500.00 USD       Autopartes y Motores de Centroamerica     Repuestos Automotrices
+fertil          fertil739         $2,650.00 USD       Fertilizantes y Nutrientes del Agro       Quimicos Agricolas IMO
+resinas         Resinas460        $3,750.00 USD       Plasticos y Polimeros Modernos            Resinas y Plasticos Industriales
+maderas         maderas815        $2,650.00 USD       Maderera y Tableros Ecologicos            Madera y Derivados
+avicola         Avicola298        $3,000.00 USD       Distribuidora Avicola del Altiplano       Productos Avicolas Refrigerados
+papel           papel562          $3,000.00 USD       Papelera y Cartones del Istmo             Papel y Embalajes
+maquinas        Maquinas903       $2,800.00 USD       Maquinaria y Equipos Industriales         Maquinaria Sobredimensionada
+caucho          caucho374         $3,000.00 USD       Importadora de Neumaticos y Hules         Neumaticos y Caucho
+consorcio       Consorcio648      $3,100.00 USD       Consorcio Alimenticio del Puerto          Alimentos Procesados y Enlatados
+cristal         cristal159        $3,350.00 USD       Vidrios y Cristales Templados             Carga Fragil y Cristales
+pinturas        Pinturas827       $3,000.00 USD       Pinturas y Recubrimientos Tecnicos        Quimicos Inflamables IMO
+flores          flores436         $3,300.00 USD       Exportadora de Flores Exoticas            Flores de Corte Reefer
+calzado         Calzado705        $2,600.00 USD       Calzado y Cueros del Continente           Calzado y Marroquineria
+belleza         belleza914        $3,750.00 USD       Cosmeticos y Belleza Natural              Cosmetica y Cuidado Personal
+medica          Medica382         $3,400.00 USD       Equipos Medicos y Hospitalarios           Instrumental Medico y Quirurgico
+ferre           Ferre651          $3,900.00 USD       Ferreteria Industrial del Puerto          Herramientas y Tornilleria
+metales         metales240        $3,750.00 USD       Metales y Reciclajes Sostenibles          Metales y Chatarras Industriales
+marazul         MarAzul893        $3,600.00 USD       Pesquera del Mar Azul S.A.                Mariscos Congelados Reefer
+azucar          azucar572         $3,700.00 USD       Azucarera y Alcoholes del Pacifico        Azucar y Alcohol Industrial
+tabaco          Tabaco164         $3,450.00 USD       Tabacalera Continental                    Tabaco y Manufactura
+cables          cables839         $2,950.00 USD       Materiales Electricos y Conductores       Conductores y Transformadores
+suminav         Suminav427        $3,500.00 USD       Suministros Navales e Industriales        Repuestos y Suministros Maritimos
+aguas           aguas760          $3,850.00 USD       Embotelladora de Aguas Termales           Bebidas Embotelladas
+harinas         Harinas318        $3,550.00 USD       Harinas y Levaduras de America            Materias Primas Panaderas
+citricos        citricos952       $2,900.00 USD       Exportadora Citricola San Antonio         Citricos Frescos Reefer
+lubri           Lubri604          $2,800.00 USD       Lubricantes y Grasas del Golfo            Aceites y Lubricantes Cisterna
+minerales       minerales283      $2,750.00 USD       Minerales y Derivados del Caribe          Minerales en Granel
+pisos           Pisos846          $2,700.00 USD       Ceramicas y Azulejos del Centro           Pisos y Ceramicas
+lacteos         lacteos471        $3,050.00 USD       Lacteos y Quesos de Montana               Productos Lacteos Reefer
+modas           Modas593          $3,100.00 USD       Confecciones y Disenos Globales           Prendas de Vestir de Exportacion
+cerveza         cerveza128        $3,700.00 USD       Cerveceria Artesanal de la Costa          Bebidas Alcoholicas Embaladas
+sensores        Sensores764       $3,900.00 USD       Instrumentacion y Control Automatico      Sensores y Paneles Electronicos
+seguridad       seguridad395      $2,600.00 USD       Seguridad Industrial y Proteccion         EPP y Proteccion Personal
+fletes          Fletes819         $2,950.00 USD       Logistica y Fletes Multimodal S.A.        Carga General y Trinquete
+
+--------------------------------------------------------------------------------
+PORTAL: BRIZO NAVIERA (URL: http://localhost:3000/index.html -> Brizo Naviera)
+Total: 4 cuentas | Rol: AGENTE | Acceso: agente.html
+Funciones: Apertura/Cierre de Subasta, Gestion de Contenedores, Autorizacion de Zarpe
+--------------------------------------------------------------------------------
+USUARIO         CONTRASENA        OFICIAL DE OPERACIONES                    CARGO / SECTOR
+---------------------------------------------------------------------------------------------------------
+agente1         Muelle482         Cap. Roberto Mendez - Muelle Norte        Agente de Atraque y Muelle Norte
+agente2         torre719          Lic. Claudia Morales - Torre de Control   Oficial de Control de Trafico y Bahias
+agente3         Zarpe365          Ing. Fernando Castillo - Despacho Buque   Agente Despachador de Turno
+agente4         bahia904          Cap. Sofia Valverde - Coordinacion Flota  Oficial de Estiba y Asignacion
+
+--------------------------------------------------------------------------------
+PORTAL: ADUANAS / SAT (URL: http://localhost:3000/index.html -> Aduanas / SAT)
+Total: 3 cuentas | Rol: AUDITOR | Acceso: auditor.html
+Funciones: Fiscalizacion de Contenido Declarado, Emision y Levantamiento de Retenciones
+--------------------------------------------------------------------------------
+USUARIO         CONTRASENA        OFICIAL FISCAL SAT                        PUESTO / FUNCION
+---------------------------------------------------------------------------------------------------------
+sat1            Sat528            Lic. Alejandro Samayoa - SAT Inspector Fiscal IAuditor Fiscal de Aduanas Maritimas
+sat2            aduanas841        Dra. Patricia Noriega - SAT Analista de ManifiestosAuditora de Dictamenes y Aforo
+sat3            Fiscal693         Lic. Marco Vinicio Ramos - SAT Supervision AduaneraSupervisor de Intervencion Fiscal
+
+--------------------------------------------------------------------------------
+PORTAL: BRIZO NAVIERA - ADMIN (URL: http://localhost:3000/index.html -> Brizo Naviera)
+Total: 3 cuentas | Rol: ADMIN | Acceso: admin.html
+Funciones: Torre de Control General, Supervision de Subastas en Vivo y Trazabilidad
+--------------------------------------------------------------------------------
+USUARIO         CONTRASENA        ADMINISTRADOR                             AREA
+---------------------------------------------------------------------------------------------------------
+admin1          Brizo617          Direccion de Operaciones Flota            Administrador General de Operaciones
+admin2          naviera835        Superintendencia de Sistemas y Logistica  Administrador de Plataforma y Logistica
+admin3          Puerto249         Gerencia General Naviera Brizo            Director Ejecutivo Brizo Logistics
+
+================================================================================
+FIN DEL DIRECTORIO DE ACCESOS
+================================================================================

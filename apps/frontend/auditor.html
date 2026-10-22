@@ -3,124 +3,426 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auditoría | Plataforma Logística</title>
+    <title>Auditoria y Fiscalizacion Aduanera | SAT - Brizo Logistics</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        // Primera linea de seguridad estricta: Solo AUDITOR (SAT)
+        const sesionUsuario = protegerRuta(['AUDITOR']);
+    </script>
     <style>
         .text-corporate { color: #0a407e; }
         .bg-corporate { background-color: #0a407e; }
         .border-corporate { border-color: #0a407e; }
-        .btn-outline { border: 1px solid #0a407e; color: #0a407e; }
-        .btn-outline:hover { background-color: #f0f7ff; }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen font-sans text-slate-800 flex flex-col">
+<body class="bg-slate-50 min-h-screen font-sans text-slate-800 flex flex-col justify-between">
 
-    <!-- Encabezado Corporativo -->
-    <header class="border-b border-gray-200 py-4 px-8 flex justify-between items-center bg-white shadow-sm">
+    <!-- Encabezado Corporativo de Fiscalización Aduanera -->
+    <header class="border-b border-gray-200 py-4 px-8 flex justify-between items-center bg-white shadow-sm sticky top-0 z-10">
         <div class="flex items-center gap-3">
-            <div class="w-12 h-12 bg-corporate rounded-full flex items-center justify-center text-white font-bold text-xl">B</div>
+            <div class="w-10 h-10 bg-red-700 rounded flex items-center justify-center text-white font-bold text-lg">
+                SAT
+            </div>
             <div>
-                <h1 class="text-xl font-light text-corporate tracking-wider">BRIZO</h1>
-                <p class="text-[10px] text-gray-500 uppercase tracking-widest">Módulo de Auditoría</p>
+                <h1 class="text-lg font-bold text-slate-800 tracking-wider">SUPERINTENDENCIA DE ADMINISTRACION TRIBUTARIA</h1>
+                <p class="text-[10px] text-gray-500 uppercase tracking-widest font-medium">Division de Fiscalizacion y Control Aduanero Maritimo</p>
             </div>
         </div>
-        <div class="flex items-center gap-2">
-            <div class="w-3 h-3 rounded-full bg-red-600 animate-pulse"></div>
-            <span class="text-sm font-bold text-red-600 uppercase tracking-wider">Aduanas y Control</span>
+
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 bg-slate-100 border border-gray-200 px-3 py-1 rounded">
+                <span class="text-[10px] font-bold text-gray-500 uppercase">Viaje:</span>
+                <span id="auditorViajeCodigo" class="font-mono text-xs font-bold text-slate-800">VIAJE-001</span>
+            </div>
+
+            <div class="flex items-center gap-2 bg-red-50 border border-red-200 px-3 py-1 rounded">
+                <span class="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
+                <span class="text-[10px] font-bold text-red-700 uppercase">Plazo Fiscal:</span>
+                <span id="auditorTimerReloj" class="font-mono text-xs font-bold text-red-900">--:--</span>
+            </div>
+
+            <div class="flex items-center gap-2 bg-red-50 border border-red-200 px-3 py-1.5 rounded text-xs">
+                <div class="flex flex-col">
+                    <span class="font-bold text-red-800" id="auditorUserName">Inspector Aduanero</span>
+                    <span class="text-[10px] text-red-600 font-semibold uppercase">Autoridad Fiscalizadora Externa</span>
+                </div>
+            </div>
+
+            <button onclick="recargarTodo()" class="text-xs text-slate-700 hover:text-slate-900 border border-gray-300 bg-white hover:bg-gray-50 px-3 py-1.5 rounded transition-colors font-medium">
+                Actualizar Datos
+            </button>
+
+            <button onclick="cerrarSesion()" title="Cerrar Sesion" 
+                class="text-xs text-red-600 hover:text-red-800 font-semibold border border-red-200 hover:border-red-300 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded transition-colors">
+                Cerrar Sesion
+            </button>
         </div>
     </header>
 
     <!-- Contenido Principal -->
-    <main class="flex-1 flex justify-center items-start p-8 mt-4">
-        <div class="bg-white p-8 border border-gray-200 border-t-4 border-t-red-600 shadow-sm w-full max-w-lg">
-            
-            <h2 class="text-2xl font-bold text-gray-800 mb-2">Bloqueo Selectivo de Carga</h2>
-            <p class="text-gray-600 text-sm mb-6">Emisión de alertas rojas para anular espacios u ofertas específicas sin detener todo el contenedor.</p>
+    <main class="max-w-5xl mx-auto w-full p-6 flex-1 my-4">
+        
+        <!-- Aviso de Vencimiento de Plazo Aduanero -->
+        <div id="avisoPlazoAuditor" class="hidden mb-4 p-3.5 rounded bg-amber-50 border border-amber-300 text-xs text-amber-900 font-semibold">
+            AVISO DE FISCALIZACION: El plazo oficial de revision aduanera ha vencido. El agente portuario queda facultado para autorizar el zarpe del buque. Las ofertas que permanezcan en retencion quedaran varadas en muelle.
+        </div>
 
-            <div class="space-y-5">
-                <div>
-                    <div class="flex justify-between items-end mb-2">
-                        <label class="block text-sm font-semibold text-gray-700">1. Seleccione la Puja / Fracción Activa</label>
-                        <button onclick="cargarPujas()" class="text-xs text-corporate hover:underline font-medium">↻ Actualizar Lista</button>
-                    </div>
-                    <select id="pujaId" class="w-full px-4 py-3 border border-gray-300 rounded focus:ring-2 focus:ring-red-500 outline-none bg-gray-50 text-sm">
-                        <option value="">Cargando ofertas del puerto...</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">2. Motivo de Intervención</label>
-                    <input type="text" id="motivo" placeholder="Ej. Documentación incompleta, inspección física..." class="w-full px-4 py-3 border border-gray-300 rounded focus:ring-2 focus:ring-red-500 outline-none text-sm">
-                </div>
-                
-                <button onclick="emitirBloqueo()" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded font-bold transition-colors shadow-md mt-2 flex justify-center items-center gap-2">
-                    Ejecutar Retención Aduanera
+        <!-- Pestañas de Accion del Auditor -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6">
+            <div class="grid grid-cols-2 p-2 bg-slate-100 border-b border-gray-200 gap-2">
+                <button id="tabBtnBloquear" onclick="cambiarModo('BLOQUEO')"
+                    class="py-3 px-4 rounded font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all bg-red-700 text-white shadow-sm">
+                    <span>Emitir Retencion Preventiva</span>
+                    <span id="badgeActivas" class="ml-2 text-[10px] bg-red-900 text-white px-2 py-0.5 rounded-full">0</span>
+                </button>
+                <button id="tabBtnLiberar" onclick="cambiarModo('LIBERAR')"
+                    class="py-3 px-4 rounded font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all text-slate-600 hover:text-slate-900">
+                    <span>Levantar Retencion (Liberacion)</span>
+                    <span id="badgeBloqueadas" class="ml-2 text-[10px] bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full">0</span>
                 </button>
             </div>
 
-            <div id="resultado" class="mt-4 text-sm font-medium hidden"></div>
+            <div class="p-8">
+                <!-- Panel 1: Emitir Retención Aduanera -->
+                <div id="panelBloqueo" class="space-y-6">
+                    <div class="border-l-4 border-l-red-600 pl-4 py-1">
+                        <h2 class="text-lg font-bold text-slate-800 uppercase tracking-wide">Orden de Retencion Selectiva de Carga</h2>
+                        <p class="text-xs text-gray-500 mt-0.5">
+                            Intervenga ofertas con mercancias sujetas a inspeccion fisica o inconsistencias documentales. No paraliza el resto del buque.
+                        </p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between items-end mb-2">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-gray-700">
+                                    1. Seleccione la Oferta a Retener (Inspeccion de Contenido)
+                                </label>
+                                <button onclick="cargarPujasActivas()" class="text-xs text-corporate hover:underline font-semibold">Refrescar Lista</button>
+                            </div>
+                            <select id="selectPujaActiva" class="w-full px-4 py-3 border border-gray-300 rounded focus:ring-2 focus:ring-red-500 outline-none bg-gray-50 text-xs font-mono">
+                                <option value="">Cargando ofertas activas...</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">
+                                2. Causa o Motivo Legal de Intervencion
+                            </label>
+                            <input type="text" id="motivoBloqueo" placeholder="Ej. Documentacion inconsistente, revision fisica de carga, perfil de riesgo..."
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded focus:ring-2 focus:ring-red-500 outline-none text-xs">
+                        </div>
+
+                        <button onclick="ejecutarBloqueo()" id="btnEjecutarBloqueo"
+                            class="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 px-4 rounded text-xs uppercase tracking-wider transition-all shadow">
+                            <span id="btnEjecutarBloqueoText">Emitir Orden de Retencion Aduanera</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Panel 2: Levantar Retención / Liberar Oferta -->
+                <div id="panelLiberacion" class="space-y-6 hidden">
+                    <div class="border-l-4 border-l-emerald-600 pl-4 py-1">
+                        <h2 class="text-lg font-bold text-slate-800 uppercase tracking-wide">Dictamen de Levantamiento de Retencion</h2>
+                        <p class="text-xs text-gray-500 mt-0.5">
+                            Rehabilite una oferta retenida tras subsanar observaciones o superar la inspeccion fisica aduanera.
+                        </p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between items-end mb-2">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-gray-700">
+                                    1. Seleccione la Oferta Retenida a Liberar
+                                </label>
+                                <button onclick="cargarPujasBloqueadas()" class="text-xs text-corporate hover:underline font-semibold">Refrescar Retenidas</button>
+                            </div>
+                            <select id="selectPujaBloqueada" class="w-full px-4 py-3 border border-amber-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none bg-amber-50/40 text-xs font-mono">
+                                <option value="">Cargando ofertas retenidas...</option>
+                            </select>
+                            <div id="detalleRetencionPrevia" class="hidden mt-2 p-3 bg-gray-50 rounded border border-gray-200 text-xs text-gray-600 font-sans">
+                                <strong class="text-slate-800">Causa registrada al retener:</strong> <span id="textoCausaPrevia">-</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">
+                                2. Dictamen / Justificacion de la Liberacion
+                            </label>
+                            <input type="text" id="justificacionLiberar" placeholder="Ej. Documentacion subsanada a satisfaccion, inspeccion fisica aprobada sin novedades..."
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none text-xs">
+                        </div>
+
+                        <button onclick="ejecutarLiberacion()" id="btnEjecutarLiberacion"
+                            class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3 px-4 rounded text-xs uppercase tracking-wider transition-all shadow">
+                            <span id="btnEjecutarLiberacionText">Aprobar Levantamiento y Reactivar Oferta</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Notificación de Resultado -->
+                <div id="alertFeedback" class="mt-6 hidden p-4 rounded text-xs font-semibold border">
+                    <span id="alertFeedbackText" class="block"></span>
+                </div>
+            </div>
         </div>
+
     </main>
 
+    <footer class="py-4 text-center text-xs text-gray-500 bg-white border-t border-gray-200">
+        <p>SAT / Aduanas &copy; 2026. Modulo Oficial de Fiscalizacion Maritima y Aduanera.</p>
+    </footer>
+
     <script>
-        async function cargarPujas() {
-            const select = document.getElementById('pujaId');
-            select.innerHTML = '<option value="">Actualizando en vivo...</option>';
+        if (sesionUsuario && sesionUsuario.nombre) {
+            document.getElementById('auditorUserName').textContent = sesionUsuario.nombre;
+        }
+
+        let modoActual = 'BLOQUEO';
+        let cachePujasBloqueadas = [];
+
+        function cambiarModo(modo) {
+            modoActual = modo;
+            ocultarFeedback();
+
+            const btnBloquear = document.getElementById('tabBtnBloquear');
+            const btnLiberar = document.getElementById('tabBtnLiberar');
+            const panelBloqueo = document.getElementById('panelBloqueo');
+            const panelLiberacion = document.getElementById('panelLiberacion');
+
+            if (modo === 'BLOQUEO') {
+                btnBloquear.className = 'py-3 px-4 rounded font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all bg-red-700 text-white shadow-sm';
+                btnLiberar.className = 'py-3 px-4 rounded font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all text-slate-600 hover:text-slate-900';
+                panelBloqueo.classList.remove('hidden');
+                panelLiberacion.classList.add('hidden');
+                cargarPujasActivas();
+            } else {
+                btnLiberar.className = 'py-3 px-4 rounded font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all bg-emerald-700 text-white shadow-sm';
+                btnBloquear.className = 'py-3 px-4 rounded font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all text-slate-600 hover:text-slate-900';
+                panelLiberacion.classList.remove('hidden');
+                panelBloqueo.classList.add('hidden');
+                cargarPujasBloqueadas();
+            }
+        }
+
+        function mostrarFeedback(mensaje, tipo = 'success') {
+            const box = document.getElementById('alertFeedback');
+            const text = document.getElementById('alertFeedbackText');
+
+            box.classList.remove('hidden');
+            text.textContent = mensaje;
+
+            if (tipo === 'success') {
+                box.className = 'mt-6 p-4 rounded text-xs font-semibold border bg-emerald-50 border-emerald-200 text-emerald-900';
+            } else if (tipo === 'blocked') {
+                box.className = 'mt-6 p-4 rounded text-xs font-semibold border bg-red-50 border-red-200 text-red-900';
+            } else {
+                box.className = 'mt-6 p-4 rounded text-xs font-semibold border bg-amber-50 border-amber-200 text-amber-900';
+            }
+        }
+
+        function ocultarFeedback() {
+            document.getElementById('alertFeedback').classList.add('hidden');
+        }
+
+        async function cargarPujasActivas() {
+            const select = document.getElementById('selectPujaActiva');
+            select.innerHTML = '<option value="">Consultando ofertas activas en Supabase...</option>';
             try {
-                const res = await fetch('http://localhost:3001/api/pujas');
+                const apiBase = (window.BRIZO_CONFIG && window.BRIZO_CONFIG.apiSubastas) || 'http://localhost:3001';
+                const res = await fetch(`${apiBase}/api/pujas`);
                 const pujas = await res.json();
                 
-                if(pujas.length === 0) {
-                    select.innerHTML = '<option value="" disabled selected>No hay pujas activas para bloquear.</option>';
+                document.getElementById('badgeActivas').textContent = pujas.length;
+
+                if (pujas.length === 0) {
+                    select.innerHTML = '<option value="" disabled selected>No hay ofertas activas en la subasta.</option>';
                     return;
                 }
 
-                select.innerHTML = '<option value="" disabled selected>Elija una oferta específica...</option>';
+                select.innerHTML = '<option value="" disabled selected>Elija la oferta a intervenir...</option>';
                 pujas.forEach(p => {
-                    select.innerHTML += `<option value="${p.id}">Puja ${p.id} | ${p.contenedorId} | Monto: $${p.monto}</option>`;
+                    const destinoTxt = p.puertoDestino ? ` | Destino: ${p.puertoDestino}` : '';
+                    select.innerHTML += `<option value="${p.id}">#${p.id} | ${p.contenedorId} - $${p.monto} | Carga: "${p.contenido}"${destinoTxt} (${p.cliente})</option>`;
                 });
             } catch (error) {
-                select.innerHTML = '<option value="">Error al conectar con el servidor.</option>';
+                select.innerHTML = '<option value="">Error de conexion con el motor de subastas.</option>';
             }
         }
 
-        async function emitirBloqueo() {
-            const select = document.getElementById('pujaId');
+        async function cargarPujasBloqueadas() {
+            const select = document.getElementById('selectPujaBloqueada');
+            select.innerHTML = '<option value="">Consultando ofertas retenidas en Supabase...</option>';
+            try {
+                const apiBase = (window.BRIZO_CONFIG && window.BRIZO_CONFIG.apiSubastas) || 'http://localhost:3001';
+                const res = await fetch(`${apiBase}/api/pujas-bloqueadas`);
+                cachePujasBloqueadas = await res.json();
+
+                document.getElementById('badgeBloqueadas').textContent = cachePujasBloqueadas.length;
+
+                if (cachePujasBloqueadas.length === 0) {
+                    select.innerHTML = '<option value="" disabled selected>No hay ofertas retenidas actualmente.</option>';
+                    document.getElementById('detalleRetencionPrevia').classList.add('hidden');
+                    return;
+                }
+
+                select.innerHTML = '<option value="" disabled selected>Elija la oferta a liberar...</option>';
+                cachePujasBloqueadas.forEach(p => {
+                    const destinoTxt = p.puertoDestino ? ` | Destino: ${p.puertoDestino}` : '';
+                    select.innerHTML += `<option value="${p.id}">[RETENIDA] #${p.id} | ${p.contenedorId} - $${p.monto} | Carga: "${p.contenido}"${destinoTxt}</option>`;
+                });
+            } catch (error) {
+                select.innerHTML = '<option value="">Error de conexion con el motor de subastas.</option>';
+            }
+        }
+
+        document.getElementById('selectPujaBloqueada').addEventListener('change', function() {
+            const pujaId = this.value;
+            const encontrada = cachePujasBloqueadas.find(p => p.id === pujaId);
+            const box = document.getElementById('detalleRetencionPrevia');
+            const texto = document.getElementById('textoCausaPrevia');
+
+            if (encontrada && encontrada.ultimoMotivo) {
+                texto.textContent = encontrada.ultimoMotivo;
+                box.classList.remove('hidden');
+            } else {
+                box.classList.add('hidden');
+            }
+        });
+
+        async function ejecutarBloqueo() {
+            const select = document.getElementById('selectPujaActiva');
             const pujaId = select.value;
-            const motivo = document.getElementById('motivo').value || 'Inspección de rutina';
-            const btn = document.querySelector('button');
-            const res = document.getElementById('resultado');
+            const motivo = document.getElementById('motivoBloqueo').value.trim() || 'Inspeccion de rutina y control documental';
+            const btn = document.getElementById('btnEjecutarBloqueo');
+            const btnText = document.getElementById('btnEjecutarBloqueoText');
 
-            if (!pujaId) return alert('Debe seleccionar una oferta específica de la lista.');
+            if (!pujaId) return alert('Por favor seleccione una oferta de la lista.');
 
-            btn.textContent = 'Procesando intervención...';
             btn.disabled = true;
+            btnText.textContent = 'Procesando orden de retencion...';
+            ocultarFeedback();
 
             try {
-                const response = await fetch('http://localhost:3002/emitir-bloqueo', {
+                const apiAduanas = (window.BRIZO_CONFIG && window.BRIZO_CONFIG.apiAduanas) || 'http://localhost:3002';
+                const res = await fetch(`${apiAduanas}/emitir-bloqueo`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ pujaId, motivo })
+                    body: JSON.stringify({ 
+                        pujaId, 
+                        motivo,
+                        auditor: sesionUsuario ? sesionUsuario.nombre : 'Inspector Aduanero'
+                    })
                 });
-                const data = await response.json();
+                const data = await res.json();
                 
-                res.className = 'mt-4 text-sm font-bold text-red-700 block p-4 bg-red-50 rounded border border-red-200';
-                res.textContent = `✓ ${data.mensaje}`;
-                
-                // Limpiar form
-                document.getElementById('motivo').value = '';
-                cargarPujas();
-            } catch (error) {
-                res.className = 'mt-4 text-sm font-bold text-gray-700 block p-4 bg-gray-200 rounded border border-gray-300';
-                res.textContent = '✗ Error de conexión con el servidor aduanero.';
+                mostrarFeedback(`Orden emitida: ${data.mensaje}`, 'blocked');
+                document.getElementById('motivoBloqueo').value = '';
+                recargarTodo();
+            } catch (err) {
+                mostrarFeedback('Error al emitir orden hacia el modulo aduanero.', 'error');
             } finally {
-                btn.innerHTML = 'Ejecutar Retención Aduanera';
                 btn.disabled = false;
+                btnText.textContent = 'Emitir Orden de Retencion Aduanera';
             }
         }
 
-        // Cargar al iniciar
-        document.addEventListener('DOMContentLoaded', cargarPujas);
+        async function ejecutarLiberacion() {
+            const select = document.getElementById('selectPujaBloqueada');
+            const pujaId = select.value;
+            const justificacion = document.getElementById('justificacionLiberar').value.trim() || 'Inspeccion fisica y documental conforme';
+            const btn = document.getElementById('btnEjecutarLiberacion');
+            const btnText = document.getElementById('btnEjecutarLiberacionText');
+
+            if (!pujaId) return alert('Por favor seleccione la oferta retenida que desea liberar.');
+
+            btn.disabled = true;
+            btnText.textContent = 'Procesando dictamen de levantamiento...';
+            ocultarFeedback();
+
+            try {
+                const apiAduanas = (window.BRIZO_CONFIG && window.BRIZO_CONFIG.apiAduanas) || 'http://localhost:3002';
+                const res = await fetch(`${apiAduanas}/emitir-liberacion`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        pujaId, 
+                        justificacion,
+                        auditor: sesionUsuario ? sesionUsuario.nombre : 'Inspector Aduanero'
+                    })
+                });
+                const data = await res.json();
+                
+                mostrarFeedback(`Dictamen favorable: ${data.mensaje}`, 'success');
+                document.getElementById('justificacionLiberar').value = '';
+                document.getElementById('detalleRetencionPrevia').classList.add('hidden');
+                recargarTodo();
+            } catch (err) {
+                mostrarFeedback('Error al emitir el levantamiento de retencion.', 'error');
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = 'Aprobar Levantamiento y Reactivar Oferta';
+            }
+        }
+
+        let datosBuqueAuditor = null;
+
+        async function cargarBuqueAuditor() {
+            try {
+                const apiBase = (window.BRIZO_CONFIG && window.BRIZO_CONFIG.apiSubastas) || 'http://localhost:3001';
+                const res = await fetch(`${apiBase}/api/buque`);
+                datosBuqueAuditor = await res.json();
+                document.getElementById('auditorViajeCodigo').textContent = datosBuqueAuditor.viajeCodigo || 'VIAJE-001';
+                actualizarRelojAuditor();
+            } catch (e) {
+                console.error('Error al consultar estado del buque para auditoria.');
+            }
+        }
+
+        function actualizarRelojAuditor() {
+            const timerEl = document.getElementById('auditorTimerReloj');
+            const aviso = document.getElementById('avisoPlazoAuditor');
+            if (!datosBuqueAuditor) return;
+
+            const ahora = Date.now();
+            const fase = datosBuqueAuditor.faseEmbarque;
+
+            if (fase === 'SUBASTA_CERRADA' && datosBuqueAuditor.finAduanas) {
+                const diff = new Date(datosBuqueAuditor.finAduanas).getTime() - ahora;
+                if (diff > 0) {
+                    const m = Math.floor(diff / 60000);
+                    const s = Math.floor((diff % 60000) / 1000);
+                    timerEl.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+                    aviso.classList.add('hidden');
+                } else {
+                    timerEl.textContent = '00:00 (Vencido)';
+                    aviso.classList.remove('hidden');
+                }
+            } else if (fase === 'SUBASTA_ABIERTA') {
+                timerEl.textContent = 'En Espera (Subasta Abierta)';
+                aviso.classList.add('hidden');
+            } else if (fase === 'ZARPE_AUTORIZADO') {
+                timerEl.textContent = 'Zarpe Efectuado';
+                aviso.classList.add('hidden');
+            } else {
+                timerEl.textContent = '--:--';
+                aviso.classList.add('hidden');
+            }
+        }
+
+        function recargarTodo() {
+            cargarBuqueAuditor();
+            cargarPujasActivas();
+            cargarPujasBloqueadas();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            recargarTodo();
+            setInterval(actualizarRelojAuditor, 1000);
+            setInterval(recargarTodo, 4000);
+        });
     </script>
 </body>
 </html>

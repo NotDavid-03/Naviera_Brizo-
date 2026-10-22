@@ -2,6 +2,10 @@
   "name": "brizo-logistics",
   "private": true,
   "scripts": {
+    "start": "node apps/api-subastas/index.js",
+    "start:subastas": "node apps/api-subastas/index.js",
+    "start:aduanas": "node apps/api-aduanas/index.js",
+    "start:frontend": "node apps/frontend/server.js",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",

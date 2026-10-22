@@ -1,0 +1,14 @@
+{
+  "name": "@repo/db",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "migrate": "node --env-file=../../.env migrate.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "postgres": "^3.4.5"
+  }
+}

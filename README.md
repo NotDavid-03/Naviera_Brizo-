@@ -1,159 +1,129 @@
-# Turborepo starter
+# Brizo Logistics - Plataforma de Subastas Maritimas y Fiscalizacion Aduanera SAT
 
-This Turborepo starter is maintained by the Turborepo core team.
+Sistema integral para la gestion de subastas de fletes de contenedores, despacho maritimo y fiscalizacion aduanera independiente, con sincronizacion en tiempo real y persistencia en Supabase PostgreSQL.
 
-## Using this example
+---
 
-Run the following command:
+## 1. Arquitectura del Sistema
 
-```sh
-npx create-turbo@latest
+El proyecto esta organizado bajo una arquitectura modular (monorepo) compuesta por tres microservicios principales:
+
+- **Frontend (`apps/frontend/`):**
+  - Interfaces web responsivas desarrolladas en HTML5 y Tailwind CSS.
+  - Portales independientes segun perfil de usuario:
+    - `index.html`: Portal central de autenticacion con control de acceso por roles.
+    - `cliente.html`: Subasta de espacios, seleccion de puerto de desembarque, declaracion de carga y monitoreo exclusivo por contenedor.
+    - `agente.html`: Consola del Agente Portuario para gestion de la flota (20 contenedores ISO), apertura/cierre de subastas, temporizadores y autorizacion de zarpe.
+    - `auditor.html`: Modulo independiente del Auditor Fiscal SAT para emision y levantamiento de retenciones aduaneras.
+    - `admin.html`: Torre de Control para supervision integral del ciclo de viaje y trazabilidad de ofertas.
+  - `config.js`: Configuracion dinamica de endpoints y WebSockets adaptable a entornos locales y despliegues en la nube.
+  - `server.js`: Servidor HTTP nativo Node.js para servir los portales estaticos.
+
+- **Motor de Subastas y WebSocket (`apps/api-subastas/`):**
+  - Servidor Fastify en puerto `3001` con canal WebSocket (`/subasta-en-vivo`).
+  - Maquina de estados estricta para el ciclo del embarque (`CREADO` -> `SUBASTA_ABIERTA` -> `SUBASTA_CERRADA` -> `ZARPE_AUTORIZADO`).
+  - Validaciones de negocio: precios base minimos por contenedor, verificacion de presupuesto del consignatario y cobro diferido hasta el cierre de subasta.
+
+- **Modulo Aduanero Independiente SAT (`apps/api-aduanas/`):**
+  - Servicio Fastify en puerto `3002` que opera con total separacion del modulo administrativo de la naviera.
+  - Notifica ordenes de retencion preventiva y dictamenes favorables de liberacion hacia el motor de subastas.
+
+- **Capa de Persistencia (`packages/db/`):**
+  - Conector nativo PostgreSQL con soporte para Supabase (`postgres.js`).
+  - Esquema relacional con tablas: `usuarios`, `buques`, `contenedores`, `pujas` y `bloqueos`.
+
+---
+
+## 2. Flujo Operativo Oficial
+
+1. **Apertura de Subasta:** El Agente Portuario define los temporizadores de subasta y aduanas y abre el embarque.
+2. **Recepcion de Posturas:** Los clientes seleccionan un contenedor del catalogo (20 unidades estandar con nomenclatura ISO y ficha tecnica en sistema metrico), eligen el puerto de desembarque (Rotterdam, Manzanillo o Long Beach), declaran el contenido e ingresan su oferta sin sobrepasar su presupuesto asignado.
+3. **Cierre de Subasta y Adjudicacion:** Al culminar el plazo o por orden del agente, la subasta se cierra y el sistema debita el saldo de los ganadores de cada contenedor adjudicado.
+4. **Fiscalizacion Aduanera SAT:** La autoridad fiscal examina manifiestos y declaraciones; puede retener ofertas sospechosas o levantar retenciones tras inspeccion fisica.
+5. **Autorizacion de Zarpe:** El agente valida que el plazo aduanero haya concluido y autoriza el zarpe del buque. Si existen cargas retenidas no liberadas, quedan varadas en muelle.
+6. **Supervision y Auditoria:** La administracion general y auditoria mantienen visibilidad en tiempo real de todo el proceso sin intervenir en las facultades aduaneras.
+
+---
+
+## 3. Requisitos Previos
+
+- Node.js >= 20
+- pnpm >= 9 (o npm / yarn)
+- Cuenta o instancia activa de Supabase / PostgreSQL
+
+---
+
+## 4. Variables de Entorno
+
+Crear un archivo `.env` en la raiz del proyecto basado en `.env.example`:
+
+```env
+# Configuracion Supabase / PostgreSQL
+SUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+DATABASE_URL=postgresql://postgres:your-password@db.your-project-id.supabase.co:5432/postgres
+
+# Puertos
+PORT_SUBASTAS=3001
+PORT_ADUANAS=3002
+PORT_FRONTEND=3000
 ```
 
-## What's inside?
+---
 
-This Turborepo includes the following packages/apps:
+## 5. Ejecucion en Entorno Local
 
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `@next/eslint-plugin-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
+Instalar dependencias:
+```bash
+pnpm install
 ```
 
-Without global `turbo`, use your package manager:
+Iniciar los microservicios:
 
-```sh
-cd my-turborepo
-npx turbo build
-pnpm exec turbo build
-pnpm exec turbo build
+- **Motor de Subastas:**
+  ```bash
+  pnpm start:subastas
+  ```
+- **Modulo Aduanero SAT:**
+  ```bash
+  pnpm start:aduanas
+  ```
+- **Servidor Frontend:**
+  ```bash
+  pnpm start:frontend
+  ```
+
+Acceso al portal: `http://localhost:3000/index.html`
+
+El directorio de credenciales para pruebas se encuentra documentado en `ACCESOS_USUARIOS.txt`.
+
+---
+
+## 6. Guia de Despliegue en la Web
+
+### Opcion A: Despliegue en Plataformas PaaS (Render / Railway / Fly.io)
+
+1. **Subastas y WebSocket (`apps/api-subastas`):**
+   - Comando de inicio: `node apps/api-subastas/index.js`
+   - Configurar variables: `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `PORT=3001` (o la asignada por la plataforma).
+2. **Modulo Aduanas SAT (`apps/api-aduanas`):**
+   - Comando de inicio: `node apps/api-aduanas/index.js`
+   - Configurar variable: `SUBASTAS_URL` apuntando a la URL publica de la API de subastas.
+3. **Frontend (`apps/frontend`):**
+   - Puede desplegarse como servicio web estatico (Vercel, Netlify, Cloudflare Pages o GitHub Pages).
+   - Para enlazar con la API remota, configure las variables en `apps/frontend/config.js` o mediante `BRIZO_CONFIG.configurarEndpoints(apiUrl, wsUrl, aduanasUrl)`.
+
+### Opcion B: Despliegue en un Unico Servidor VPS (Docker / PM2)
+
+Con PM2 en un servidor Linux:
+```bash
+pm2 start apps/api-subastas/index.js --name "brizo-subastas"
+pm2 start apps/api-aduanas/index.js --name "brizo-aduanas"
+pm2 start apps/frontend/server.js --name "brizo-frontend"
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+---
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+## 7. Licencia y Cumplimiento
 
-```sh
-turbo build --filter=docs
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo dev
-pnpm exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo dev --filter=web
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-pnpm exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-pnpm exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+Brizo Logistics &copy; 2026. Todos los derechos reservados. Desarrollado bajo estandares internacionales de fletes maritimos y fiscalizacion portuaria.

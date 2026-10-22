@@ -3,97 +3,661 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control Operativo | Brizo</title>
+    <title>Control Operativo de Despacho | Brizo Logistics</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        const sesionUsuario = protegerRuta(['AGENTE', 'ADMIN']);
+    </script>
     <style>
         .text-corporate { color: #0a407e; }
         .bg-corporate { background-color: #0a407e; }
         .border-corporate { border-color: #0a407e; }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen font-sans text-slate-800">
+<body class="bg-slate-50 min-h-screen font-sans text-slate-800 flex flex-col justify-between">
 
     <!-- Encabezado Corporativo -->
-    <header class="border-b border-gray-200 py-4 px-8 flex justify-between items-center bg-white shadow-sm">
+    <header class="border-b border-gray-200 py-4 px-8 flex justify-between items-center bg-white shadow-sm sticky top-0 z-10">
         <div class="flex items-center gap-3">
-            <div class="w-12 h-12 bg-corporate rounded-full flex items-center justify-center text-white font-bold text-xl">B</div>
+            <div class="w-10 h-10 bg-corporate rounded flex items-center justify-center text-white font-bold text-lg">
+                B
+            </div>
             <div>
-                <h1 class="text-xl font-light text-corporate tracking-wider">BRIZO</h1>
-                <p class="text-[10px] text-gray-500 uppercase tracking-widest">Control Operativo de Flota</p>
+                <h1 class="text-lg font-bold text-corporate tracking-wider">BRIZO LOGISTICS</h1>
+                <p class="text-[10px] text-gray-500 uppercase tracking-widest font-medium">Torre de Control de Despacho y Flota</p>
             </div>
         </div>
-        <div class="hidden md:flex items-center gap-2">
-            <span class="text-sm font-bold text-corporate uppercase tracking-wider">Agente en Turno</span>
-            <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">👤</div>
+
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 bg-slate-100 border border-gray-200 px-3 py-1.5 rounded text-xs">
+                <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+                <div class="flex flex-col">
+                    <span class="font-bold text-slate-800" id="agenteUserName">Agente de Turno</span>
+                    <span class="text-[10px] text-gray-500 font-semibold" id="agenteUserRole">OFICIAL DE OPERACIONES</span>
+                </div>
+            </div>
+
+            <button onclick="cargarDatosPuerto()" class="text-xs text-slate-700 hover:text-slate-900 border border-gray-300 bg-white hover:bg-gray-50 px-3 py-1.5 rounded transition-colors font-medium">
+                Refrescar
+            </button>
+
+            <button onclick="cerrarSesion()" title="Cerrar Sesion" 
+                class="text-xs text-red-600 hover:text-red-800 font-semibold border border-red-200 hover:border-red-300 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded transition-colors">
+                Cerrar Sesion
+            </button>
         </div>
     </header>
 
-    <main class="max-w-6xl mx-auto p-8 mt-4">
-        <h2 class="text-2xl font-bold text-corporate mb-6">Panel de Despacho y Atraques</h2>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Gestión del Buque -->
-            <div class="bg-white p-6 border border-gray-200 border-t-4 border-t-corporate shadow-sm">
-                <div class="flex justify-between items-center mb-6 border-b pb-4">
-                    <h3 class="text-lg font-bold text-gray-800" id="nombreBuque">Buque Insignia: Cargando...</h3>
-                    <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-bold rounded uppercase">Atracado</span>
+    <main class="max-w-7xl mx-auto p-6 flex-1 w-full space-y-6">
+        
+        <!-- Banner de Buque y Ciclo de Vida -->
+        <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-xs font-bold uppercase tracking-widest text-gray-400">Buque Mercante en Puerto</span>
+                        <span id="badgeViaje" class="px-2 py-0.5 rounded bg-slate-800 text-white font-mono text-[10px] font-bold">
+                            VIAJE-001
+                        </span>
+                    </div>
+                    <h2 class="text-2xl font-bold text-slate-800" id="nombreBuque">Buque: Cargando...</h2>
                 </div>
-
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Programar Salida / Vuelo</label>
-                        <input type="datetime-local" class="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-800 outline-none text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Publicar Evento Operativo</label>
-                        <select class="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-800 outline-none text-sm">
-                            <option>Apertura de Subastas - Fase 1</option>
-                            <option>Cierre de Recepción de Carga</option>
-                            <option>Inspección General Autorizada</option>
-                        </select>
-                    </div>
-                    <button class="w-full bg-corporate hover:bg-blue-900 text-white py-2 rounded font-bold transition-colors mt-2 text-sm">
-                        Confirmar y Publicar
-                    </button>
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-semibold text-gray-500">Estado Operativo:</span>
+                    <span id="badgeFase" class="px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-gray-100 text-gray-700 border">
+                        Cargando...
+                    </span>
                 </div>
             </div>
 
-            <!-- Manifiesto de Carga (Lectura en vivo) -->
-            <div class="bg-white p-6 border border-gray-200 shadow-sm">
-                <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Espacios Habilitados (Manifiesto)</h3>
-                <ul id="listaContenedores" class="space-y-3">
-                    <li class="text-sm text-gray-500">Conectando con el puerto...</li>
-                </ul>
+            <!-- Banner del Temporizador Oficial -->
+            <div id="bannerTimer" class="mt-4 p-3 rounded-lg border flex flex-col sm:flex-row justify-between items-center gap-3 bg-slate-50 border-slate-200">
+                <div class="flex items-center gap-3">
+                    <span id="timerDot" class="w-2.5 h-2.5 rounded-full bg-gray-400"></span>
+                    <div>
+                        <span id="timerTitulo" class="text-xs font-bold uppercase tracking-wider text-slate-700 block">Temporizador de Control</span>
+                        <span id="timerSubtexto" class="text-[11px] text-gray-500">Configure los tiempos y abra la subasta para iniciar el ciclo</span>
+                    </div>
+                </div>
+                <div class="font-mono text-xl font-bold tracking-wider text-slate-800 bg-white px-3 py-1 rounded border border-gray-200" id="timerReloj">
+                    --:--
+                </div>
             </div>
+
+            <!-- Fases del Despacho -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+                <div id="step1" class="p-3 rounded border text-center transition-all">
+                    <span class="text-[10px] font-bold block text-gray-400 uppercase">Fase 1</span>
+                    <span class="text-xs font-bold">Embarque Creado</span>
+                </div>
+                <div id="step2" class="p-3 rounded border text-center transition-all">
+                    <span class="text-[10px] font-bold block text-gray-400 uppercase">Fase 2</span>
+                    <span class="text-xs font-bold">Subasta Abierta</span>
+                </div>
+                <div id="step3" class="p-3 rounded border text-center transition-all">
+                    <span class="text-[10px] font-bold block text-gray-400 uppercase">Fase 3</span>
+                    <span class="text-xs font-bold">Fiscalizacion Aduanera</span>
+                </div>
+                <div id="step4" class="p-3 rounded border text-center transition-all">
+                    <span class="text-[10px] font-bold block text-gray-400 uppercase">Fase 4</span>
+                    <span class="text-xs font-bold">Zarpe Autorizado</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controles Operativos y Administracion de Contenedores -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Columna Izquierda: Botones de Fase Estricta + Formulario Nuevo Contenedor (4 cols) -->
+            <div class="lg:col-span-4 space-y-6">
+                
+                <!-- Acciones de Fase Estricta -->
+                <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm space-y-3">
+                    <div class="border-b pb-2">
+                        <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
+                            Control Secuencial de Despacho
+                        </h3>
+                        <p class="text-[11px] text-gray-500 mt-0.5">
+                            Las fases son secuenciales y obligatorias. No puede zarpar sin cerrar la subasta ni reabrir si ya zarpo.
+                        </p>
+                    </div>
+
+                    <!-- Configuracion de Temporizadores para el Embarque -->
+                    <div id="boxConfigTiempos" class="bg-slate-50 p-3 rounded border border-gray-200 space-y-2 mb-1">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-corporate block">Duracion de Fases:</span>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-500 block">Subasta (min)</label>
+                                <input type="number" id="inputDuracionSubasta" min="1" max="60" value="5"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-bold text-corporate outline-none focus:ring-1 focus:ring-blue-800">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-500 block">Aduanas (min)</label>
+                                <input type="number" id="inputDuracionAduanas" min="1" max="60" value="3"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-bold text-amber-800 outline-none focus:ring-1 focus:ring-amber-600">
+                            </div>
+                        </div>
+                        <div class="flex gap-1 pt-0.5">
+                            <button type="button" onclick="setPresetTiempos(1, 1)" class="text-[9px] px-2 py-0.5 rounded bg-white border border-gray-200 hover:bg-gray-100 text-slate-600 font-semibold">1m / 1m (Prueba)</button>
+                            <button type="button" onclick="setPresetTiempos(3, 2)" class="text-[9px] px-2 py-0.5 rounded bg-white border border-gray-200 hover:bg-gray-100 text-slate-600 font-semibold">3m / 2m</button>
+                            <button type="button" onclick="setPresetTiempos(5, 3)" class="text-[9px] px-2 py-0.5 rounded bg-white border border-gray-200 hover:bg-gray-100 text-slate-600 font-semibold">5m / 3m</button>
+                        </div>
+                    </div>
+
+                    <!-- Paso 1: Abrir Subasta -->
+                    <div>
+                        <button onclick="ejecutarAperturaSubasta()" id="btnAbrir"
+                            class="w-full py-2.5 px-4 rounded font-bold text-xs bg-corporate hover:bg-blue-900 text-white transition-all shadow text-left flex justify-between items-center">
+                            <span>1. Abrir Subasta a Clientes</span>
+                            <span class="text-[10px] bg-blue-800 px-1.5 py-0.5 rounded">Habilitar</span>
+                        </button>
+                        <span id="hintAbrir" class="text-[10px] text-gray-400 block mt-1 ml-1">Inicia recepcion de ofertas y temporizador de subasta.</span>
+                    </div>
+
+                    <!-- Paso 2: Cerrar Subasta -->
+                    <div>
+                        <button onclick="cambiarFaseEmbarque('SUBASTA_CERRADA')" id="btnCerrar"
+                            class="w-full py-2.5 px-4 rounded font-bold text-xs bg-amber-600 hover:bg-amber-700 text-white transition-all shadow text-left flex justify-between items-center">
+                            <span>2. Cerrar Subasta (Pase a Aduanas)</span>
+                            <span class="text-[10px] bg-amber-700 px-1.5 py-0.5 rounded">Fiscalizar</span>
+                        </button>
+                        <span id="hintCerrar" class="text-[10px] text-gray-400 block mt-1 ml-1">Detiene ofertas e inicia temporizador de fiscalizacion SAT.</span>
+                    </div>
+
+                    <!-- Aviso de conclusion de plazo aduanero -->
+                    <div id="avisoPlazoAduanas" class="hidden p-2.5 rounded bg-amber-50 border border-amber-300 text-[10px] text-amber-900 font-medium">
+                        Plazo de fiscalizacion aduanera cumplido. Si existen retenciones sin levantar, el agente esta autorizado para zarpar desacoplando la carga retenida.
+                    </div>
+
+                    <!-- Paso 3: Autorizar Zarpe -->
+                    <div>
+                        <button onclick="autorizarZarpe()" id="btnZarpar"
+                            class="w-full py-2.5 px-4 rounded font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow text-left flex justify-between items-center">
+                            <span>3. Autorizar Zarpe del Buque</span>
+                            <span class="text-[10px] bg-emerald-700 px-1.5 py-0.5 rounded">Despacho</span>
+                        </button>
+                        <span id="hintZarpar" class="text-[10px] text-gray-400 block mt-1 ml-1">Requiere haber concluido el ciclo de fiscalizacion.</span>
+                    </div>
+
+                    <!-- Botón de Reinicio para Nuevo Viaje (Solo visible tras zarpar) -->
+                    <div id="boxNuevoViaje" class="hidden pt-3 border-t border-gray-200">
+                        <button onclick="reiniciarNuevoViaje()" id="btnNuevoViaje"
+                            class="w-full py-2 px-3 rounded font-bold text-xs border border-slate-700 text-slate-800 hover:bg-slate-100 transition-colors text-center">
+                            Preparar Siguiente Viaje (Nuevo Embarque)
+                        </button>
+                        <span class="text-[10px] text-gray-400 block text-center mt-1">Reinicia el ciclo operativo a Fase 1.</span>
+                    </div>
+
+                    <div id="statusAccion" class="text-[11px] text-center font-medium text-gray-600 pt-1"></div>
+                </div>
+
+                <!-- Formulario Agregar Contenedor -->
+                <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm space-y-3">
+                    <h3 class="text-sm font-bold text-slate-800 border-b pb-2 uppercase tracking-wider">
+                        Asignar Nuevo Contenedor
+                    </h3>
+                    
+                    <form onsubmit="crearNuevoContenedor(event)" class="space-y-2.5 text-xs">
+                        <div>
+                            <label class="block font-bold text-gray-600 mb-1">Codigo ISO 6346</label>
+                            <input type="text" id="nuevoId" required placeholder="ej. MSKU-998822-1" 
+                                class="w-full px-3 py-1.5 border border-gray-300 rounded font-mono uppercase text-xs">
+                        </div>
+
+                        <div>
+                            <label class="block font-bold text-gray-600 mb-1">Tipo de Espacio (Español)</label>
+                            <input type="text" id="nuevoTipo" required placeholder="ej. Contenedor Seco Estandar (6 metros)" 
+                                class="w-full px-3 py-1.5 border border-gray-300 rounded text-xs">
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <label class="block font-bold text-gray-600 mb-1">TEU</label>
+                                <input type="number" id="nuevoTeu" value="1" min="1" max="2" required 
+                                    class="w-full px-2 py-1.5 border border-gray-300 rounded text-xs">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-gray-600 mb-1">Peso (t)</label>
+                                <input type="number" step="0.1" id="nuevoPeso" value="28.0" required 
+                                    class="w-full px-2 py-1.5 border border-gray-300 rounded text-xs">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-gray-600 mb-1">Vol (m3)</label>
+                                <input type="number" step="0.1" id="nuevoVol" value="33.2" required 
+                                    class="w-full px-2 py-1.5 border border-gray-300 rounded text-xs">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block font-bold text-gray-600 mb-1">Especificaciones Tecnicas (Metrico)</label>
+                            <input type="text" id="nuevoSpecs" placeholder="ej. Rango termico -25 C a +25 C, longitud 6 m" 
+                                class="w-full px-3 py-1.5 border border-gray-300 rounded text-xs">
+                        </div>
+
+                        <div>
+                            <label class="block font-bold text-gray-600 mb-1">Precio Base (USD)</label>
+                            <input type="number" id="nuevoBase" placeholder="1000" required 
+                                class="w-full px-3 py-1.5 border border-gray-300 rounded font-bold text-corporate text-xs">
+                        </div>
+
+                        <button type="submit" 
+                            class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded text-xs uppercase tracking-wider transition-colors mt-2">
+                            Registrar Contenedor
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+
+            <!-- Columna Derecha: Tabla de Flota de 20 Contenedores (8 cols) -->
+            <div class="lg:col-span-8 bg-white p-6 rounded-lg border border-gray-200 shadow-sm space-y-4">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800">Manifiesto de Flota de Contenedores Habilitados</h3>
+                        <p class="text-xs text-gray-500">Espacios fisicos disponibles con medidas en sistema metrico.</p>
+                    </div>
+                    <span id="contadorContenedores" class="text-xs bg-slate-100 text-slate-800 font-bold px-3 py-1 rounded border">
+                        0 Contenedores
+                    </span>
+                </div>
+
+                <div class="overflow-x-auto max-h-[640px] overflow-y-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] font-bold sticky top-0">
+                            <tr>
+                                <th class="p-2.5 border-b">Identificador ISO</th>
+                                <th class="p-2.5 border-b">Tipo de Carga</th>
+                                <th class="p-2.5 border-b">TEU</th>
+                                <th class="p-2.5 border-b">Limites (Peso / Vol)</th>
+                                <th class="p-2.5 border-b">Especificaciones Tecnicas</th>
+                                <th class="p-2.5 border-b">Base (USD)</th>
+                                <th class="p-2.5 border-b text-center">Accion</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaContenedores" class="divide-y divide-gray-100 font-mono text-[11px]">
+                            <tr><td colspan="7" class="p-4 text-center text-gray-400 font-sans">Cargando flota desde Supabase...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
     </main>
 
+    <footer class="py-4 text-center text-xs text-gray-500 bg-white border-t border-gray-200">
+        <p>Brizo Logistics &copy; 2026. Sistema de Despacho y Atraques Maritimos.</p>
+    </footer>
+
     <script>
+        let faseActual = 'CREADO';
+        let buqueActualObj = null;
+        let listaContenedoresLocal = [];
+        let timerInterval = null;
+
+        if (sesionUsuario && sesionUsuario.nombre) {
+            document.getElementById('agenteUserName').textContent = sesionUsuario.nombre;
+            document.getElementById('agenteUserRole').textContent = `ROL: ${sesionUsuario.rol}`;
+        }
+
+        function setPresetTiempos(subasta, aduanas) {
+            document.getElementById('inputDuracionSubasta').value = subasta;
+            document.getElementById('inputDuracionAduanas').value = aduanas;
+        }
+
         async function cargarDatosPuerto() {
             try {
-                const res = await fetch('http://localhost:3001/api/buque');
+                const apiBase = (window.BRIZO_CONFIG && window.BRIZO_CONFIG.apiSubastas) || 'http://localhost:3001';
+                const res = await fetch(`${apiBase}/api/buque`);
                 const data = await res.json();
+                buqueActualObj = data;
                 
-                document.getElementById('nombreBuque').textContent = `Buque: ${data.buque}`;
+                document.getElementById('nombreBuque').textContent = `Buque Insignia: ${data.buque} (${data.contenedores ? data.contenedores.length : 0} Espacios)`;
+                document.getElementById('badgeViaje').textContent = data.viajeCodigo || 'VIAJE-001';
                 
-                const lista = document.getElementById('listaContenedores');
-                lista.innerHTML = '';
-                data.contenedores.forEach(c => {
-                    lista.innerHTML += `
-                        <li class="flex justify-between items-center p-3 bg-gray-50 border border-gray-100 rounded">
-                            <div class="flex flex-col">
-                                <span class="font-bold text-corporate">${c.id}</span>
-                                <span class="text-xs text-gray-500">${c.tipo}</span>
-                            </div>
-                            <span class="text-sm font-medium text-green-700">Base: $${c.base}</span>
-                        </li>
-                    `;
-                });
+                faseActual = data.faseEmbarque || 'CREADO';
+                actualizarVisualFase(faseActual);
+                
+                listaContenedoresLocal = data.contenedores || [];
+                document.getElementById('contadorContenedores').textContent = `${listaContenedoresLocal.length} Contenedores Habilitados`;
+
+                renderizarTablaContenedores(listaContenedoresLocal);
+                iniciarReloj();
             } catch (error) {
-                document.getElementById('listaContenedores').innerHTML = '<li class="text-red-500">Error de conexión.</li>';
+                console.error("Error al cargar datos del buque.");
             }
         }
+
+        function renderizarTablaContenedores(contenedores) {
+            const tbody = document.getElementById('tablaContenedores');
+            if (contenedores.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-500 font-sans">No hay contenedores registrados en el buque.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = '';
+            contenedores.forEach(c => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-2.5 font-bold text-corporate">${c.id}</td>
+                        <td class="p-2.5 font-sans">${c.tipo}</td>
+                        <td class="p-2.5">${c.capacidadTeu || 1} TEU</td>
+                        <td class="p-2.5">${c.pesoMaxTon || 28} t / ${c.volumenM3 || 33} m3</td>
+                        <td class="p-2.5 font-sans text-gray-600 max-w-xs truncate" title="${c.especificaciones}">${c.especificaciones || 'General'}</td>
+                        <td class="p-2.5 font-bold text-emerald-700">$${c.base}</td>
+                        <td class="p-2.5 text-center font-sans">
+                            <button onclick="retirarContenedor('${c.id}')" title="Retirar del buque"
+                                class="text-[10px] text-red-600 hover:text-red-800 font-bold border border-red-200 px-2 py-0.5 rounded hover:bg-red-50">
+                                Retirar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function crearNuevoContenedor(e) {
+            e.preventDefault();
+            const id = document.getElementById('nuevoId').value.trim().toUpperCase();
+            const tipo = document.getElementById('nuevoTipo').value.trim();
+            const capacidadTeu = parseInt(document.getElementById('nuevoTeu').value);
+            const pesoMaxTon = parseFloat(document.getElementById('nuevoPeso').value);
+            const volumenM3 = parseFloat(document.getElementById('nuevoVol').value);
+            const especificaciones = document.getElementById('nuevoSpecs').value.trim() || 'Carga general estandar';
+            const base = parseFloat(document.getElementById('nuevoBase').value);
+
+            try {
+                const apiBase = (window.BRIZO_CONFIG && window.BRIZO_CONFIG.apiSubastas) || 'http://localhost:3001';
+                const res = await fetch(`${apiBase}/api/contenedores`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, tipo, capacidadTeu, pesoMaxTon, volumenM3, especificaciones, base })
+                });
+                const data = await res.json();
+                if (data.exito) {
+                    alert(`Contenedor ${id} registrado exitosamente en el buque.`);
+                    document.getElementById('nuevoId').value = '';
+                    document.getElementById('nuevoTipo').value = '';
+                    document.getElementById('nuevoSpecs').value = '';
+                    document.getElementById('nuevoBase').value = '';
+                    cargarDatosPuerto();
+                } else {
+                    alert(data.mensaje || 'Error al registrar contenedor.');
+                }
+            } catch (err) {
+                alert('Error de comunicacion con el servidor.');
+            }
+        }
+
+        async function retirarContenedor(id) {
+            const confirmar = confirm(`¿Confirmar retiro del contenedor ${id} del buque?`);
+            if (!confirmar) return;
+
+            try {
+                const apiBase = (window.BRIZO_CONFIG && window.BRIZO_CONFIG.apiSubastas) || 'http://localhost:3001';
+                const res = await fetch(`${apiBase}/api/contenedores/${id}`, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                if (data.exito) {
+                    cargarDatosPuerto();
+                } else {
+                    alert('Error al retirar contenedor.');
+                }
+            } catch (e) {
+                alert('Error al comunicarse con el servidor.');
+            }
+        }
+
+        function actualizarVisualFase(fase) {
+            const badge = document.getElementById('badgeFase');
+            const s1 = document.getElementById('step1');
+            const s2 = document.getElementById('step2');
+            const s3 = document.getElementById('step3');
+            const s4 = document.getElementById('step4');
+
+            const btnAbrir = document.getElementById('btnAbrir');
+            const btnCerrar = document.getElementById('btnCerrar');
+            const btnZarpar = document.getElementById('btnZarpar');
+            const boxNuevoViaje = document.getElementById('boxNuevoViaje');
+            const boxConfigTiempos = document.getElementById('boxConfigTiempos');
+            const avisoPlazoAduanas = document.getElementById('avisoPlazoAduanas');
+
+            [s1, s2, s3, s4].forEach(s => s.className = 'p-3 rounded border text-center transition-all bg-gray-50 text-gray-400 border-gray-200');
+
+            if (fase === 'CREADO') {
+                badge.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-gray-200 text-gray-800 border';
+                badge.textContent = 'Embarque Creado (Listo para abrir subasta)';
+                s1.className = 'p-3 rounded border text-center transition-all bg-blue-50 text-blue-900 border-blue-400 font-bold';
+
+                btnAbrir.disabled = false;
+                btnAbrir.className = 'w-full py-2.5 px-4 rounded font-bold text-xs bg-corporate hover:bg-blue-900 text-white transition-all shadow text-left flex justify-between items-center cursor-pointer';
+                
+                btnCerrar.disabled = true;
+                btnCerrar.className = 'w-full py-2.5 px-4 rounded font-bold text-xs bg-gray-300 text-gray-500 cursor-not-allowed opacity-60 text-left flex justify-between items-center';
+
+                btnZarpar.disabled = true;
+                btnZarpar.className = 'w-full py-2.5 px-4 rounded font-bold text-xs bg-gray-300 text-gray-500 cursor-not-allowed opacity-60 text-left flex justify-between items-center';
+
+                boxNuevoViaje.classList.add('hidden');
+                boxConfigTiempos.classList.remove('hidden');
+                avisoPlazoAduanas.classList.add('hidden');
+
+            } else if (fase === 'SUBASTA_ABIERTA') {
+                badge.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300';
+                badge.textContent = 'Subasta Abierta (Recibiendo ofertas)';
+                s1.className = 'p-3 rounded border text-center transition-all bg-emerald-50 text-emerald-800 border-emerald-300 font-bold';
+                s2.className = 'p-3 rounded border text-center transition-all bg-emerald-100 text-emerald-900 border-emerald-500 font-bold shadow-sm';
+
+                btnAbrir.disabled = true;
+                btnAbrir.className = 'w-full py-2.5 px-4 rounded font-bold text-xs bg-gray-300 text-gray-500 cursor-not-allowed opacity-60 text-left flex justify-between items-center';
+
+                btnCerrar.disabled = false;
+                btnCerrar.className = 'w-full py-2.5 px-4 rounded font-bold text-xs bg-amber-600 hover:bg-amber-700 text-white transition-all shadow text-left flex justify-between items-center cursor-pointer';
+
+                btnZarpar.disabled = true;
+                btnZarpar.className = 'w-full py-2.5 px-4 rounded font-bold text-xs bg-gray-300 text-gray-500 cursor-not-allowed opacity-60 text-left flex justify-between items-center';
+
+                boxNuevoViaje.classList.add('hidden');
+                boxConfigTiempos.classList.add('hidden');
+                avisoPlazoAduanas.classList.add('hidden');
+
+            } else if (fase === 'SUBASTA_CERRADA') {
+                badge.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300';
+                badge.textContent = 'Subasta Cerrada (En Fiscalizacion Aduanera)';
+                s1.className = s2.className = 'p-3 rounded border text-center bg-gray-100 text-gray-600';
+                s3.className = 'p-3 rounded border text-center transition-all bg-amber-100 text-amber-900 border-amber-500 font-bold shadow-sm';
+
+                btnAbrir.disabled = true;
+                btnAbrir.className = 'w-full py-2.5 px-4 rounded font-bold text-xs bg-gray-300 text-gray-500 cursor-not-allowed opacity-60 text-left flex justify-between items-center';
+
+                btnCerrar.disabled = true;
+                btnCerrar.className = 'w-full py-2.5 px-4 rounded font-bold text-xs bg-gray-300 text-gray-500 cursor-not-allowed opacity-60 text-left flex justify-between items-center';
+
+                btnZarpar.disabled = false;
+                btnZarpar.className = 'w-full py-2.5 px-4 rounded font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow text-left flex justify-between items-center cursor-pointer';
+
+                boxNuevoViaje.classList.add('hidden');
+                boxConfigTiempos.classList.add('hidden');
+
+            } else if (fase === 'ZARPE_AUTORIZADO') {
+                badge.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-100 text-blue-900 border border-blue-400';
+                badge.textContent = 'Zarpe Autorizado (Buque en Navegacion)';
+                s1.className = s2.className = s3.className = 'p-3 rounded border text-center bg-gray-100 text-gray-600';
+                s4.className = 'p-3 rounded border text-center transition-all bg-blue-700 text-white border-blue-800 font-bold shadow-sm';
+
+                btnAbrir.disabled = true;
+                btnAbrir.className = 'w-full py-2.5 px-4 rounded font-bold text-xs bg-gray-300 text-gray-500 cursor-not-allowed opacity-60 text-left flex justify-between items-center';
+
+                btnCerrar.disabled = true;
+                btnCerrar.className = 'w-full py-2.5 px-4 rounded font-bold text-xs bg-gray-300 text-gray-500 cursor-not-allowed opacity-60 text-left flex justify-between items-center';
+
+                btnZarpar.disabled = true;
+                btnZarpar.className = 'w-full py-2.5 px-4 rounded font-bold text-xs bg-gray-300 text-gray-500 cursor-not-allowed opacity-60 text-left flex justify-between items-center';
+
+                boxNuevoViaje.classList.remove('hidden');
+                boxConfigTiempos.classList.add('hidden');
+                avisoPlazoAduanas.classList.add('hidden');
+            }
+        }
+
+        function iniciarReloj() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(actualizarRelojTick, 1000);
+            actualizarRelojTick();
+        }
+
+        async function actualizarRelojTick() {
+            const dot = document.getElementById('timerDot');
+            const titulo = document.getElementById('timerTitulo');
+            const subtexto = document.getElementById('timerSubtexto');
+            const reloj = document.getElementById('timerReloj');
+            const avisoPlazo = document.getElementById('avisoPlazoAduanas');
+
+            if (!buqueActualObj) return;
+
+            const ahora = Date.now();
+
+            if (faseActual === 'CREADO') {
+                dot.className = 'w-2.5 h-2.5 rounded-full bg-gray-400';
+                titulo.textContent = 'Temporizador de Control';
+                subtexto.textContent = 'Configure los minutos y presione Abrir Subasta para iniciar.';
+                reloj.textContent = '--:--';
+                reloj.className = 'font-mono text-xl font-bold tracking-wider text-slate-800 bg-white px-3 py-1 rounded border border-gray-200';
+                avisoPlazo.classList.add('hidden');
+
+            } else if (faseActual === 'SUBASTA_ABIERTA') {
+                dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse';
+                titulo.textContent = 'Subasta en Vivo - Tiempo Restante';
+                avisoPlazo.classList.add('hidden');
+
+                if (buqueActualObj.finSubasta) {
+                    const diff = new Date(buqueActualObj.finSubasta).getTime() - ahora;
+                    if (diff > 0) {
+                        const m = Math.floor(diff / 60000);
+                        const s = Math.floor((diff % 60000) / 1000);
+                        reloj.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+                        subtexto.textContent = `Los clientes pueden pujar activamente. Finaliza a las ${new Date(buqueActualObj.finSubasta).toLocaleTimeString()}`;
+                        reloj.className = 'font-mono text-xl font-bold tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1 rounded border border-emerald-300';
+                    } else {
+                        reloj.textContent = '00:00';
+                        subtexto.textContent = 'Tiempo de subasta concluido. Pasando automaticamente a fiscalizacion aduanera...';
+                        reloj.className = 'font-mono text-xl font-bold tracking-wider text-red-600 bg-red-50 px-3 py-1 rounded border border-red-200';
+                        // Auto-cierre de subasta por tiempo
+                        cambiarFaseEmbarque('SUBASTA_CERRADA');
+                    }
+                } else {
+                    reloj.textContent = 'ACTIVA';
+                }
+
+            } else if (faseActual === 'SUBASTA_CERRADA') {
+                dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse';
+                titulo.textContent = 'Periodo de Fiscalizacion Aduanera (SAT)';
+
+                if (buqueActualObj.finAduanas) {
+                    const diff = new Date(buqueActualObj.finAduanas).getTime() - ahora;
+                    if (diff > 0) {
+                        const m = Math.floor(diff / 60000);
+                        const s = Math.floor((diff % 60000) / 1000);
+                        reloj.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+                        subtexto.textContent = `Auditor revisa manifiestos y retenciones. Vence a las ${new Date(buqueActualObj.finAduanas).toLocaleTimeString()}`;
+                        reloj.className = 'font-mono text-xl font-bold tracking-wider text-amber-700 bg-amber-50 px-3 py-1 rounded border border-amber-300';
+                        avisoPlazo.classList.add('hidden');
+                    } else {
+                        reloj.textContent = '00:00';
+                        subtexto.textContent = 'Plazo de revision vencido. El agente esta autorizado para zarpar desacoplando retenciones.';
+                        reloj.className = 'font-mono text-xl font-bold tracking-wider text-slate-800 bg-amber-100 px-3 py-1 rounded border border-amber-400';
+                        avisoPlazo.classList.remove('hidden');
+                    }
+                } else {
+                    reloj.textContent = 'EN REVISION';
+                }
+
+            } else if (faseActual === 'ZARPE_AUTORIZADO') {
+                dot.className = 'w-2.5 h-2.5 rounded-full bg-blue-600';
+                titulo.textContent = 'Buque en Navegacion';
+                subtexto.textContent = 'El viaje ha zarpado formalmente. Prepare el proximo viaje cuando este listo.';
+                reloj.textContent = 'EN RUTA';
+                reloj.className = 'font-mono text-xl font-bold tracking-wider text-blue-700 bg-blue-50 px-3 py-1 rounded border border-blue-300';
+                avisoPlazo.classList.add('hidden');
+            }
+        }
+
+        async function ejecutarAperturaSubasta() {
+            const subastaMin = parseInt(document.getElementById('inputDuracionSubasta').value, 10) || 5;
+            const aduanasMin = parseInt(document.getElementById('inputDuracionAduanas').value, 10) || 3;
+
+            cambiarFaseEmbarque('SUBASTA_ABIERTA', {
+                duracionSubastaMin: subastaMin,
+                duracionAduanasMin: aduanasMin
+            });
+        }
+
+        async function cambiarFaseEmbarque(nuevaFase, paramsExtras = {}) {
+            const statusEl = document.getElementById('statusAccion');
+            statusEl.textContent = 'Actualizando fase...';
+
+            try {
+                const apiBase = (window.BRIZO_CONFIG && window.BRIZO_CONFIG.apiSubastas) || 'http://localhost:3001';
+                const res = await fetch(`${apiBase}/api/buque/fase`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        fase: nuevaFase,
+                        agente: sesionUsuario ? sesionUsuario.nombre : 'Agente Operativo',
+                        ...paramsExtras
+                    })
+                });
+                const data = await res.json();
+                if (data.exito) {
+                    faseActual = nuevaFase;
+                    buqueActualObj = { ...buqueActualObj, ...data.buque, faseEmbarque: nuevaFase };
+                    actualizarVisualFase(nuevaFase);
+                    statusEl.textContent = `Estado actualizado a: ${nuevaFase}`;
+                    cargarDatosPuerto();
+                } else {
+                    statusEl.textContent = `Error: ${data.mensaje || 'Operacion no permitida'}`;
+                    alert(data.mensaje || 'Error al cambiar fase.');
+                }
+            } catch (e) {
+                statusEl.textContent = 'Error de comunicacion con el motor.';
+            }
+        }
+
+        async function autorizarZarpe() {
+            if (faseActual !== 'SUBASTA_CERRADA') {
+                alert('Operacion no permitida: Debe cerrar la subasta antes de poder autorizar el zarpe del buque.');
+                return;
+            }
+
+            try {
+                const apiBase = (window.BRIZO_CONFIG && window.BRIZO_CONFIG.apiSubastas) || 'http://localhost:3001';
+                const res = await fetch(`${apiBase}/api/pujas-bloqueadas`);
+                const bloqueadas = await res.json();
+
+                if (bloqueadas.length > 0) {
+                    const confirmar = confirm(`ALERTA ADUANERA: Existen ${bloqueadas.length} oferta(s) con RETENCION VIGENTE.\n\nAl autorizar el zarpe, la carga retenida no embarcara y quedara varada en muelle para resolucion SAT.\n\n¿Desea autorizar el zarpe oficial del buque?`);
+                    if (!confirmar) return;
+                } else {
+                    const confirmar = confirm('Confirmar autorizacion de zarpe del buque. Sin retenciones pendientes para este viaje.');
+                    if (!confirmar) return;
+                }
+
+                cambiarFaseEmbarque('ZARPE_AUTORIZADO');
+            } catch (e) {
+                cambiarFaseEmbarque('ZARPE_AUTORIZADO');
+            }
+        }
+
+        async function reiniciarNuevoViaje() {
+            const confirmar = confirm('¿Desea preparar un nuevo embarque para el buque? Esto iniciara un nuevo codigo de viaje y archivara el historial actual.');
+            if (!confirmar) return;
+
+            cambiarFaseEmbarque('CREADO');
+        }
+
         document.addEventListener('DOMContentLoaded', cargarDatosPuerto);
     </script>
 </body>
-</html> 
+</html>

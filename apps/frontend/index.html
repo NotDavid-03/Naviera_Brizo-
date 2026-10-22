@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso al Sistema | Brizo Logistics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .text-corporate { color: #0a407e; }
+        .bg-corporate { background-color: #0a407e; }
+        .border-corporate { border-color: #0a407e; }
+        .hover-bg-corporate:hover { background-color: #072e5b; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen font-sans text-slate-800 flex flex-col justify-between">
+
+    <!-- Encabezado Corporativo Brizo -->
+    <header class="bg-white border-b border-gray-200 py-4 px-8 shadow-sm">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-corporate rounded flex items-center justify-center text-white font-bold text-lg">
+                    B
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-corporate tracking-wider">BRIZO LOGISTICS</h1>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-widest font-medium">Plataforma Logistica y Despacho Maritimo</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 text-xs font-medium text-gray-600 bg-gray-50 px-3 py-1.5 rounded border border-gray-200">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span>Conexion Segura a Supabase</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenedor Principal de Autenticación -->
+    <main class="flex-1 flex items-center justify-center p-4 sm:p-6 my-6">
+        <div class="w-full max-w-xl bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            
+            <!-- Barra Superior con Selector de 3 Portales -->
+            <div class="p-6 pb-4 bg-slate-50 border-b border-gray-200">
+                <p class="text-[11px] uppercase font-bold tracking-wider text-gray-400 mb-3 text-center">
+                    Seleccione el Portal Institucional
+                </p>
+
+                <!-- Switcher de 3 Pestañas -->
+                <div class="grid grid-cols-3 gap-1.5 p-1.5 bg-gray-200/80 rounded text-xs font-semibold">
+                    <button id="btnTabClientes" onclick="cambiarPortal('CLIENTE')" 
+                        class="py-2.5 px-2 rounded transition-all bg-corporate text-white shadow-sm text-center">
+                        Portal Clientes
+                    </button>
+                    
+                    <button id="btnTabAdmin" onclick="cambiarPortal('ADMIN')" 
+                        class="py-2.5 px-2 rounded transition-all text-gray-600 hover:text-slate-900 text-center">
+                        Brizo Naviera
+                    </button>
+
+                    <button id="btnTabAduanas" onclick="cambiarPortal('ADUANAS')" 
+                        class="py-2.5 px-2 rounded transition-all text-gray-600 hover:text-slate-900 text-center">
+                        Aduanas / SAT
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cabecera del Portal Activo -->
+            <div id="portalInfoBanner" class="px-8 pt-6 pb-2 text-center transition-all">
+                <span id="portalBadge" class="inline-block px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-blue-100 text-blue-900 mb-2 border border-blue-200">
+                    Portal Comercial de Clientes
+                </span>
+                <h2 id="portalTitulo" class="text-xl font-bold text-corporate">
+                    Ingreso para Clientes y Agencias de Carga
+                </h2>
+                <p id="portalDescripcion" class="text-xs text-gray-500 mt-1 max-w-sm mx-auto">
+                    Ingrese con su identificador para consultar especificaciones de los 20 contenedores y emitir ofertas con declaracion de carga.
+                </p>
+            </div>
+
+            <!-- Mensajes de Alerta y Validación -->
+            <div class="px-8 pt-4">
+                <div id="alertBox" class="hidden p-3 rounded text-xs border font-semibold">
+                    <span id="alertMessage" class="block"></span>
+                </div>
+            </div>
+
+            <!-- Formulario de Inicio de Sesión -->
+            <form id="formLogin" onsubmit="procesarLogin(event)" class="p-8 pt-4 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5">
+                        Identificador de Usuario
+                    </label>
+                    <input type="text" id="username" required autocomplete="username"
+                        placeholder="Ingrese su usuario asignado"
+                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-800 focus:border-blue-800 outline-none transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5">
+                        Contraseña
+                    </label>
+                    <input type="password" id="password" required autocomplete="current-password"
+                        placeholder="Contraseña registrada"
+                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-800 focus:border-blue-800 outline-none transition-all">
+                </div>
+
+                <div class="flex items-center justify-between text-xs text-gray-500 pt-1">
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" id="recordar" checked class="rounded text-corporate focus:ring-blue-800">
+                        <span>Mantener sesion activa</span>
+                    </label>
+                    <span class="text-gray-400">Canal Cifrado SSL</span>
+                </div>
+
+                <button type="submit" id="btnSubmit" 
+                    class="w-full bg-corporate hover-bg-corporate text-white font-bold py-3 px-4 rounded text-xs uppercase tracking-wider transition-all shadow">
+                    <span id="btnSubmitText">Ingresar al Portal</span>
+                </button>
+            </form>
+
+        </div>
+    </main>
+
+    <!-- Pie de Página Institucional -->
+    <footer class="py-4 text-center text-xs text-gray-500 bg-white border-t border-gray-200">
+        <p>Brizo Logistics &copy; 2026. Plataforma Logistica y Fiscalizacion Aduanera Independiente.</p>
+    </footer>
+
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        let portalActivo = 'CLIENTE';
+
+        function cambiarPortal(tipo) {
+            portalActivo = tipo;
+            ocultarAlerta();
+
+            const btnClientes = document.getElementById('btnTabClientes');
+            const btnAdmin = document.getElementById('btnTabAdmin');
+            const btnAduanas = document.getElementById('btnTabAduanas');
+            const badge = document.getElementById('portalBadge');
+            const titulo = document.getElementById('portalTitulo');
+            const desc = document.getElementById('portalDescripcion');
+            const btnSubmit = document.getElementById('btnSubmit');
+            const usernameInput = document.getElementById('username');
+
+            btnClientes.className = 'py-2.5 px-2 rounded transition-all text-gray-600 hover:text-slate-900 text-center';
+            btnAdmin.className = 'py-2.5 px-2 rounded transition-all text-gray-600 hover:text-slate-900 text-center';
+            btnAduanas.className = 'py-2.5 px-2 rounded transition-all text-gray-600 hover:text-slate-900 text-center';
+
+            if (tipo === 'CLIENTE') {
+                btnClientes.className = 'py-2.5 px-2 rounded transition-all bg-corporate text-white shadow-sm text-center';
+                badge.className = 'inline-block px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-blue-100 text-blue-900 mb-2 border border-blue-200';
+                badge.textContent = 'Portal Comercial de Clientes';
+                titulo.className = 'text-xl font-bold text-corporate';
+                titulo.textContent = 'Ingreso para Clientes y Agencias de Carga';
+                desc.textContent = 'Ingrese para consultar las especificaciones de los 20 contenedores y emitir ofertas con declaracion de carga.';
+                btnSubmit.className = 'w-full bg-corporate hover-bg-corporate text-white font-bold py-3 px-4 rounded text-xs uppercase tracking-wider transition-all shadow';
+                usernameInput.placeholder = 'Usuario asignado (ej. cliente01)';
+            } else if (tipo === 'ADMIN') {
+                btnAdmin.className = 'py-2.5 px-2 rounded transition-all bg-slate-800 text-white shadow-sm text-center';
+                badge.className = 'inline-block px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-slate-200 text-slate-800 mb-2 border border-slate-300';
+                badge.textContent = 'Personal Interno de Brizo Naviera';
+                titulo.className = 'text-xl font-bold text-slate-800';
+                titulo.textContent = 'Despacho Portuario y Operaciones';
+                desc.textContent = 'Gestion de la flota de contenedores, apertura, cierre y autorizacion de zarpe.';
+                btnSubmit.className = 'w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-4 rounded text-xs uppercase tracking-wider transition-all shadow';
+                usernameInput.placeholder = 'Usuario operativo o administrativo (ej. agente01)';
+            } else if (tipo === 'ADUANAS') {
+                btnAduanas.className = 'py-2.5 px-2 rounded transition-all bg-red-700 text-white shadow-sm text-center';
+                badge.className = 'inline-block px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-red-100 text-red-800 mb-2 border border-red-200';
+                badge.textContent = 'Autoridad Aduanera / SAT (Organo Regulador)';
+                titulo.className = 'text-xl font-bold text-red-800';
+                titulo.textContent = 'Fiscalizacion y Control Aduanero';
+                desc.textContent = 'Modulo externo e independiente para inspeccion de manifiestos, retenciones y dictamenes.';
+                btnSubmit.className = 'w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 px-4 rounded text-xs uppercase tracking-wider transition-all shadow';
+                usernameInput.placeholder = 'Usuario de fiscalizacion aduanera (ej. auditor01)';
+            }
+        }
+
+        function mostrarAlerta(mensaje, tipo = 'error') {
+            const box = document.getElementById('alertBox');
+            const text = document.getElementById('alertMessage');
+
+            box.classList.remove('hidden');
+            text.textContent = mensaje;
+
+            if (tipo === 'error') {
+                box.className = 'p-3 rounded text-xs border font-semibold bg-red-50 border-red-200 text-red-800';
+            } else if (tipo === 'info') {
+                box.className = 'p-3 rounded text-xs border font-semibold bg-amber-50 border-amber-200 text-amber-800';
+            } else if (tipo === 'success') {
+                box.className = 'p-3 rounded text-xs border font-semibold bg-emerald-50 border-emerald-200 text-emerald-800';
+            }
+        }
+
+        function ocultarAlerta() {
+            document.getElementById('alertBox').classList.add('hidden');
+        }
+
+        async function procesarLogin(e) {
+            e.preventDefault();
+            ocultarAlerta();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const btnSubmit = document.getElementById('btnSubmit');
+            const btnText = document.getElementById('btnSubmitText');
+
+            btnSubmit.disabled = true;
+            btnText.textContent = 'Verificando con Supabase...';
+
+            try {
+                const resultado = await autenticarUsuario(portalActivo, username, password);
+
+                if (!resultado.exito) {
+                    mostrarAlerta(resultado.mensaje, 'error');
+                    btnSubmit.disabled = false;
+                    btnText.textContent = 'Ingresar al Portal';
+                    return;
+                }
+
+                mostrarAlerta(`Bienvenido, ${resultado.sesion.nombre}. Accediendo al sistema...`, 'success');
+                btnText.textContent = 'Redirigiendo...';
+
+                setTimeout(() => {
+                    window.location.href = resultado.redirect;
+                }, 500);
+            } catch (err) {
+                mostrarAlerta('Error inesperado al iniciar sesion.', 'error');
+                btnSubmit.disabled = false;
+                btnText.textContent = 'Ingresar al Portal';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('alerta') === 'no_autenticado') {
+                mostrarAlerta('Se requiere iniciar sesion para acceder a las vistas protegidas del sistema.', 'info');
+            }
+
+            const sesionExistente = obtenerSesionActiva();
+            if (sesionExistente) {
+                mostrarAlerta(`Sesion activa detectada: ${sesionExistente.nombre} (${sesionExistente.rol}).`, 'info');
+            }
+        });
+    </script>
+</body>
+</html>

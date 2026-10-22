@@ -19,8 +19,10 @@ La característica demostrada más importante es que Aduanas puede bloquear una 
 
 - La lógica de servidor está implementada en dos servicios Node.js con Fastify.
 - Las interfaces son cuatro archivos HTML independientes con JavaScript en línea y Tailwind CSS cargado desde CDN.
-- El estado de las ofertas vive solamente en memoria dentro del proceso de subastas. Reiniciar ese proceso borra el historial.
-- No hay base de datos, autenticación, usuarios, permisos, pagos, documentación aduanera persistida, cierre formal de subastas ni asignación de ganadores.
+- La persistencia está conectada a PostgreSQL en Supabase mediante `@repo/db` (`packages/db`).
+- Las ofertas incluyen declaración de carga/contenido y el buque cuenta con un ciclo de vida por fases (`CREADO`, `SUBASTA_ABIERTA`, `SUBASTA_CERRADA`, `ZARPE_AUTORIZADO`).
+- El módulo de Auditoría Aduanera (SAT) es independiente de la naviera; el Administrador no tiene injerencia en sus dictámenes.
+- Cuenta con autenticación por portales (`auth.js` e `index.html`) con control estricto de roles y cierre de sesión.
 - No se observan pruebas automatizadas implementadas para estos servicios.
 - El `README.md` actual contiene información del starter genérico de Turborepo y no explica Brizo. Este documento sirve como contexto específico del proyecto.
 
@@ -31,9 +33,9 @@ brizo-logistics/
 ├── apps/
 │   ├── api-subastas/       # API principal, WebSocket y estado temporal de ofertas
 │   ├── api-aduanas/        # API de auditoría que envía solicitudes de bloqueo
-│   └── frontend/           # Interfaces estáticas HTML por rol
+│   └── frontend/           # Interfaces estáticas HTML por rol, login unificado y capa auth.js
 ├── packages/
-│   ├── db/                 # No contiene implementación de base de datos en el estado inspeccionado
+│   ├── db/                 # Módulo de persistencia PostgreSQL conectado a Supabase (@repo/db)
 │   ├── ui/                 # Componentes React de ejemplo, no conectados a las pantallas HTML
 │   ├── eslint-config/      # Configuración compartida de ESLint
 │   └── typescript-config/  # Configuraciones compartidas de TypeScript
@@ -83,6 +85,8 @@ Estos valores están codificados directamente en memoria; no se cargan de config
 | `GET /api/todas-las-pujas` | Devuelve todas las ofertas, incluidas las bloqueadas. Lo usa Administración. |
 | WebSocket `/subasta-en-vivo` | Recibe ofertas y difunde a todos los clientes conectados las nuevas ofertas y las alertas de Aduanas. |
 | `POST /webhook/aduanas` | Busca una oferta por ID, la marca `bloqueada` si existe y difunde una alerta a los clientes conectados. |
+| `POST /webhook/aduanas/liberar` | Restablece una puja a `activa` en Supabase y difunde notificación verde de liberación. |
+| `GET /api/pujas-bloqueadas` | Lista ofertas retenidas para gestión del Auditor. |
 
 #### Cómo se procesa una oferta
 

@@ -3,85 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administrador | Brizo</title>
+    <title>Torre de Control Administrativa | Brizo Logistics</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        const sesionUsuario = protegerRuta(['ADMIN']);
+    </script>
     <style>
         .text-corporate { color: #0a407e; }
         .bg-corporate { background-color: #0a407e; }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen font-sans text-slate-800">
+<body class="bg-slate-100 min-h-screen font-sans text-slate-800 flex flex-col justify-between">
 
-    <!-- Encabezado Corporativo (Versión Admin - Dark) -->
-    <header class="border-b border-gray-800 py-4 px-8 flex justify-between items-center bg-slate-900 shadow-md">
+    <!-- Encabezado Corporativo Dark -->
+    <header class="border-b border-gray-800 py-4 px-8 flex justify-between items-center bg-slate-900 shadow-md sticky top-0 z-10">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-white rounded flex items-center justify-center text-slate-900 font-bold text-xl">B</div>
+            <div class="w-10 h-10 bg-white rounded flex items-center justify-center text-slate-900 font-bold text-lg">
+                B
+            </div>
             <div>
-                <h1 class="text-xl font-light text-white tracking-wider">BRIZO</h1>
-                <p class="text-[10px] text-gray-400 uppercase tracking-widest">Dashboard Global Administrativo</p>
+                <h1 class="text-lg font-bold text-white tracking-wider">BRIZO LOGISTICS</h1>
+                <p class="text-[10px] text-gray-400 uppercase tracking-widest font-medium">Torre de Supervision y Auditoria Naviera Global</p>
             </div>
         </div>
-        <button onclick="cargarMetricas()" class="text-xs text-gray-300 hover:text-white flex items-center gap-1 border border-gray-700 px-3 py-1 rounded">
-            <span>↻</span> Refrescar Métricas
-        </button>
+
+        <div class="flex items-center gap-4">
+            <div class="hidden sm:flex items-center gap-2 bg-slate-800 border border-slate-700 px-3 py-1.5 rounded text-xs">
+                <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                <span class="text-white font-semibold" id="adminUserName">Superintendente General</span>
+                <span class="text-[10px] bg-blue-900 text-blue-200 px-1.5 py-0.5 rounded font-mono font-bold">ADMIN</span>
+            </div>
+
+            <button onclick="cargarMetricas()" class="text-xs text-gray-300 hover:text-white border border-gray-700 px-3 py-1.5 rounded hover:bg-slate-800 transition-colors">
+                Refrescar Metricas
+            </button>
+
+            <button onclick="cerrarSesion()" title="Cerrar Sesion" 
+                class="text-xs text-red-400 hover:text-red-200 font-semibold border border-red-900/60 bg-red-950/40 hover:bg-red-900/50 px-3 py-1.5 rounded transition-colors">
+                Cerrar Sesion
+            </button>
+        </div>
     </header>
 
-    <main class="max-w-7xl mx-auto p-8 mt-2">
+    <main class="max-w-7xl mx-auto p-6 flex-1 w-full my-2 space-y-6">
         
-        <!-- KPIs (Métricas Globales) -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white p-6 rounded shadow-sm border-l-4 border-l-blue-500">
-                <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Módulo Subastas</div>
-                <div class="text-xl font-bold text-gray-800 flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-green-500"></div> Operativo (3001)
+        <!-- Estado del Buque y Ciclo de Despacho -->
+        <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-xs font-bold uppercase tracking-wider text-gray-400">Torre de Control del Buque</span>
+                    <span id="adminViajeCodigo" class="px-2 py-0.5 rounded bg-slate-800 text-white font-mono text-[10px] font-bold">
+                        VIAJE-001
+                    </span>
+                </div>
+                <h2 class="text-xl font-bold text-slate-800" id="buqueInfo">Buque: Cargando...</h2>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 bg-slate-50 border border-gray-200 px-3 py-1 rounded">
+                    <span class="text-[11px] font-bold text-gray-500 uppercase">Tiempo:</span>
+                    <span id="adminTimer" class="font-mono text-xs font-bold text-corporate">--:--</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-500 font-medium">Fase:</span>
+                    <span id="adminBadgeFase" class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-gray-100 text-gray-700 border">
+                        Consultando...
+                    </span>
                 </div>
             </div>
-            <div class="bg-white p-6 rounded shadow-sm border-l-4 border-l-red-500">
-                <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Módulo Aduanas</div>
+        </div>
+
+        <!-- KPIs Metricas Globales -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-l-blue-500">
+                <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Modulo Subastas</div>
                 <div class="text-xl font-bold text-gray-800 flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-green-500"></div> Aislado (3002)
+                    <span class="w-2 h-2 rounded-full bg-green-500"></span> Conectado a Supabase
                 </div>
             </div>
-            <div class="bg-white p-6 rounded shadow-sm border-l-4 border-l-corporate">
+            <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-l-red-500">
+                <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Modulo Aduanas (SAT)</div>
+                <div class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span> Organo Autonomo Aislado
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-l-corporate">
                 <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Total Ofertas Emitidas</div>
                 <div class="text-3xl font-bold text-corporate" id="totalOfertas">0</div>
             </div>
-            <div class="bg-white p-6 rounded shadow-sm border-l-4 border-l-red-600">
+            <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-l-red-600">
                 <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Intervenciones Aduaneras</div>
                 <div class="text-3xl font-bold text-red-600" id="totalBloqueadas">0</div>
             </div>
         </div>
 
-        <!-- Tabla de Auditoría y Seguridad -->
-        <div class="bg-white rounded shadow-sm border border-gray-200 overflow-hidden">
-            <div class="bg-gray-50 border-b border-gray-200 p-4">
-                <h3 class="font-bold text-gray-800">Auditoría de Transacciones en Vivo</h3>
+        <!-- Tabla de Auditoría Consolidada -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                <div>
+                    <h2 class="text-base font-bold text-gray-800">Historial Consolidado del Despacho</h2>
+                    <p class="text-xs text-gray-500">Supervision integral de ofertas, contenidos declarados y dictamenes aduaneros.</p>
+                </div>
+                <span class="text-xs text-gray-500 bg-white border border-gray-200 px-2.5 py-1 rounded font-mono">Modo Solo Lectura</span>
             </div>
-            <table class="w-full text-sm text-left">
-                <thead class="text-xs text-gray-500 uppercase bg-gray-100 border-b border-gray-200">
-                    <tr>
-                        <th class="px-6 py-4">ID Transacción</th>
-                        <th class="px-6 py-4">Hora</th>
-                        <th class="px-6 py-4">Espacio / Contenedor</th>
-                        <th class="px-6 py-4">Monto (USD)</th>
-                        <th class="px-6 py-4">Estado del Sistema</th>
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="border-b border-gray-200 font-bold text-gray-600 bg-gray-50 uppercase tracking-wider text-[11px]">
+                        <th class="px-6 py-3.5">ID Oferta</th>
+                        <th class="px-6 py-3.5">Hora</th>
+                        <th class="px-6 py-3.5">Cliente</th>
+                        <th class="px-6 py-3.5">Espacio ISO</th>
+                        <th class="px-6 py-3.5">Puerto Destino</th>
+                        <th class="px-6 py-3.5">Contenido Declarado</th>
+                        <th class="px-6 py-3.5">Monto Ofertado</th>
+                        <th class="px-6 py-3.5">Estado Operativo</th>
                     </tr>
                 </thead>
                 <tbody id="tablaAuditoria" class="divide-y divide-gray-100">
-                    <tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">Cargando registros...</td></tr>
+                    <tr><td colspan="8" class="px-6 py-4 text-center text-gray-500">Cargando registros desde Supabase...</td></tr>
                 </tbody>
             </table>
         </div>
     </main>
 
+    <footer class="py-4 text-center text-xs text-gray-500 bg-white border-t border-gray-200">
+        <p>Brizo Logistics &copy; 2026. Dashboard Global de Despacho y Trazabilidad Maritima.</p>
+    </footer>
+
     <script>
+        if (sesionUsuario && sesionUsuario.nombre) {
+            document.getElementById('adminUserName').textContent = sesionUsuario.nombre;
+        }
+
         async function cargarMetricas() {
             try {
-                // Hacemos fetch al mismo endpoint que usa el Auditor, pero lo usamos para analíticas
-               // Cambiamos /api/pujas por /api/todas-las-pujas
-                const res = await fetch('http://localhost:3001/api/todas-las-pujas');
-                // Nota: El backend actualmente filtra por 'activa', para el admin sería ideal ver todas.
-                // Como maqueta, usaremos los datos devueltos para simular las métricas.
+                const apiBase = (window.BRIZO_CONFIG && window.BRIZO_CONFIG.apiSubastas) || 'http://localhost:3001';
+                // 1. Cargar buque y fase
+                const resBuque = await fetch(`${apiBase}/api/buque`);
+                const dataBuque = await resBuque.json();
+                document.getElementById('buqueInfo').textContent = `${dataBuque.buque} (${dataBuque.estado})`;
+                document.getElementById('adminViajeCodigo').textContent = dataBuque.viajeCodigo || 'VIAJE-001';
+                
+                const badgeFase = document.getElementById('adminBadgeFase');
+                const timerEl = document.getElementById('adminTimer');
+                const fase = dataBuque.faseEmbarque || 'CREADO';
+                const ahora = Date.now();
+
+                if (fase === 'SUBASTA_ABIERTA') {
+                    badgeFase.className = 'px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300';
+                    badgeFase.textContent = 'Subasta Abierta';
+                    
+                    if (dataBuque.finSubasta) {
+                        const diff = new Date(dataBuque.finSubasta).getTime() - ahora;
+                        if (diff > 0) {
+                            const m = Math.floor(diff / 60000);
+                            const s = Math.floor((diff % 60000) / 1000);
+                            timerEl.textContent = `Subasta: ${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+                        } else {
+                            timerEl.textContent = 'Subasta: 00:00 (Concluida)';
+                        }
+                    } else {
+                        timerEl.textContent = 'Subasta Activa';
+                    }
+                } else if (fase === 'SUBASTA_CERRADA') {
+                    badgeFase.className = 'px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300';
+                    badgeFase.textContent = 'En Fiscalizacion Aduanera';
+
+                    if (dataBuque.finAduanas) {
+                        const diff = new Date(dataBuque.finAduanas).getTime() - ahora;
+                        if (diff > 0) {
+                            const m = Math.floor(diff / 60000);
+                            const s = Math.floor((diff % 60000) / 1000);
+                            timerEl.textContent = `Aduanas: ${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+                        } else {
+                            timerEl.textContent = 'Aduanas: 00:00 (Plazo Vencido)';
+                        }
+                    } else {
+                        timerEl.textContent = 'Aduanas: En Revision';
+                    }
+                } else if (fase === 'ZARPE_AUTORIZADO') {
+                    badgeFase.className = 'px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-100 text-blue-900 border border-blue-400';
+                    badgeFase.textContent = 'Zarpe Autorizado';
+                    timerEl.textContent = 'En Navegacion';
+                } else {
+                    badgeFase.className = 'px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-gray-100 text-gray-700 border';
+                    badgeFase.textContent = fase;
+                    timerEl.textContent = '--:--';
+                }
+
+                // 2. Cargar historial de ofertas
+                const res = await fetch(`${apiBase}/api/todas-las-pujas`);
                 const pujas = await res.json();
                 
                 const tabla = document.getElementById('tablaAuditoria');
@@ -91,28 +203,31 @@
                 let bloqueadas = 0;
 
                 if (pujas.length === 0) {
-                    tabla.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No hay transacciones registradas en esta sesión.</td></tr>';
+                    tabla.innerHTML = '<tr><td colspan="8" class="px-6 py-6 text-center text-gray-500">No hay transacciones registradas en este embarque.</td></tr>';
+                    document.getElementById('totalOfertas').textContent = 0;
+                    document.getElementById('totalBloqueadas').textContent = 0;
                     return;
                 }
 
-                pujas.reverse().forEach(p => {
-                    // Contadores
+                pujas.forEach(p => {
                     if (p.estado === 'activa') activas++;
                     if (p.estado === 'bloqueada') bloqueadas++;
 
-                    // Color del estado
                     const badgeClass = p.estado === 'activa' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800';
+                        ? 'bg-green-100 text-green-800 border-green-200' 
+                        : 'bg-red-100 text-red-800 border-red-200';
 
                     tabla.innerHTML += `
                         <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-6 py-4 font-mono font-medium text-corporate">${p.id}</td>
-                            <td class="px-6 py-4 text-gray-500">${p.timestamp}</td>
-                            <td class="px-6 py-4 font-medium">${p.contenedorId}</td>
-                            <td class="px-6 py-4 font-bold text-gray-800">$${p.monto}</td>
-                            <td class="px-6 py-4">
-                                <span class="px-3 py-1 rounded text-xs font-bold uppercase tracking-wider ${badgeClass}">
+                            <td class="px-6 py-3.5 font-mono font-bold text-corporate">${p.id}</td>
+                            <td class="px-6 py-3.5 text-gray-500">${p.timestamp}</td>
+                            <td class="px-6 py-3.5 font-semibold text-slate-800">${p.cliente || 'Importadora S.A.'}</td>
+                            <td class="px-6 py-3.5 font-mono text-gray-700">${p.contenedorId}</td>
+                            <td class="px-6 py-3.5 text-slate-700 text-[11px] font-medium max-w-xs truncate" title="${p.puertoDestino || 'N/A'}">${p.puertoDestino || 'N/A'}</td>
+                            <td class="px-6 py-3.5 text-slate-700 max-w-xs truncate" title="${p.contenido || 'Carga general'}">${p.contenido || 'Carga general'}</td>
+                            <td class="px-6 py-3.5 font-bold text-emerald-700">$${p.monto}</td>
+                            <td class="px-6 py-3.5">
+                                <span class="px-2.5 py-1 rounded border text-[10px] font-bold uppercase tracking-wider ${badgeClass}">
                                     ${p.estado}
                                 </span>
                             </td>
@@ -121,7 +236,6 @@
                 });
 
                 document.getElementById('totalOfertas').textContent = pujas.length;
-                // En esta maqueta el endpoint solo devuelve activas, pero dejamos la lógica lista
                 document.getElementById('totalBloqueadas').textContent = bloqueadas;
 
             } catch (error) {
@@ -129,10 +243,9 @@
             }
         }
 
-        // Cargar al inicio y refrescar cada 5 segundos
         document.addEventListener('DOMContentLoaded', () => {
             cargarMetricas();
-            setInterval(cargarMetricas, 5000);
+            setInterval(cargarMetricas, 4000);
         });
     </script>
 </body>
