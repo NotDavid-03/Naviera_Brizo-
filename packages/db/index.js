@@ -41,54 +41,105 @@ export const sql = postgres(cleanUrl, {
  * Obtiene los datos del buque, fase operativa actual y contenedores con especificaciones
  */
 export async function getBuqueConContenedores() {
-    const buques = await sql`
-        SELECT id, nombre, estado, 
-               COALESCE(fase_embarque, 'CREADO') AS "faseEmbarque",
-               COALESCE(viaje_codigo, 'VIAJE-001') AS "viajeCodigo",
-               COALESCE(duracion_subasta_min, 5) AS "duracionSubastaMin",
-               COALESCE(duracion_aduanas_min, 3) AS "duracionAduanasMin",
-               fin_subasta AS "finSubasta",
-               fin_aduanas AS "finAduanas",
-               subasta_iniciada_en AS "subastaIniciadaEn",
-               aduanas_iniciada_en AS "aduanasIniciadaEn"
-        FROM buques 
-        LIMIT 1
-    `;
-    const buque = buques[0] || { 
-        id: 'EMERALD-ACE', 
-        nombre: 'Emerald Ace', 
-        estado: 'Atracado', 
-        faseEmbarque: 'CREADO',
-        viajeCodigo: 'VIAJE-001',
-        duracionSubastaMin: 5,
-        duracionAduanasMin: 3
-    };
-    
-    const contenedores = await sql`
-        SELECT id, tipo, 
-               COALESCE(capacidad_teu, 1) AS "capacidadTeu",
-               COALESCE(peso_max_ton, 28.0)::float AS "pesoMaxTon",
-               COALESCE(volumen_m3, 33.2)::float AS "volumenM3",
-               COALESCE(especificaciones, 'Carga general estandar') AS "especificaciones",
-               base::float
-        FROM contenedores 
-        ORDER BY id ASC
-    `;
-    
-    return {
-        id: buque.id,
-        buque: buque.nombre,
-        estado: buque.estado,
-        faseEmbarque: buque.faseEmbarque,
-        viajeCodigo: buque.viajeCodigo,
-        duracionSubastaMin: buque.duracionSubastaMin,
-        duracionAduanasMin: buque.duracionAduanasMin,
-        finSubasta: buque.finSubasta,
-        finAduanas: buque.finAduanas,
-        subastaIniciadaEn: buque.subastaIniciadaEn,
-        aduanasIniciadaEn: buque.aduanasIniciadaEn,
-        contenedores: contenedores
-    };
+    try {
+        const buques = await sql`
+            SELECT id, nombre, estado, 
+                   COALESCE(fase_embarque, 'CREADO') AS "faseEmbarque",
+                   COALESCE(viaje_codigo, 'VIAJE-001') AS "viajeCodigo",
+                   COALESCE(duracion_subasta_min, 5) AS "duracionSubastaMin",
+                   COALESCE(duracion_aduanas_min, 3) AS "duracionAduanasMin",
+                   fin_subasta AS "finSubasta",
+                   fin_aduanas AS "finAduanas",
+                   subasta_iniciada_en AS "subastaIniciadaEn",
+                   aduanas_iniciada_en AS "aduanasIniciadaEn"
+            FROM buques 
+            LIMIT 1
+        `;
+        const buque = buques[0] || { 
+            id: 'EMERALD-ACE', 
+            nombre: 'Emerald Ace', 
+            estado: 'Atracado', 
+            faseEmbarque: 'CREADO',
+            viajeCodigo: 'VIAJE-001',
+            duracionSubastaMin: 5,
+            duracionAduanasMin: 3
+        };
+        
+        const contenedores = await sql`
+            SELECT id, tipo, 
+                   COALESCE(capacidad_teu, 1) AS "capacidadTeu",
+                   COALESCE(peso_max_ton, 28.0)::float AS "pesoMaxTon",
+                   COALESCE(volumen_m3, 33.2)::float AS "volumenM3",
+                   COALESCE(especificaciones, 'Carga general estandar') AS "especificaciones",
+                   base::float
+            FROM contenedores 
+            ORDER BY id ASC
+        `;
+        
+        return {
+            id: buque.id,
+            buque: buque.nombre,
+            estado: buque.estado,
+            faseEmbarque: buque.faseEmbarque,
+            viajeCodigo: buque.viajeCodigo,
+            duracionSubastaMin: buque.duracionSubastaMin,
+            duracionAduanasMin: buque.duracionAduanasMin,
+            finSubasta: buque.finSubasta,
+            finAduanas: buque.finAduanas,
+            subastaIniciadaEn: buque.subastaIniciadaEn,
+            aduanasIniciadaEn: buque.aduanasIniciadaEn,
+            contenedores: contenedores
+        };
+    } catch (err) {
+        return await getBuqueConContenedoresREST();
+    }
+}
+
+async function getBuqueConContenedoresREST() {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !supabaseKey) return null;
+    try {
+        const [resBuque, resConts] = await Promise.all([
+            fetch(`${supabaseUrl}/rest/v1/buques?id=eq.EMERALD-ACE`, { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` } }).then(r => r.json()),
+            fetch(`${supabaseUrl}/rest/v1/contenedores?select=*&order=id.asc`, { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` } }).then(r => r.json())
+        ]);
+        const buque = (resBuque && resBuque[0]) || { id: 'EMERALD-ACE', nombre: 'Emerald Ace', estado: 'Atracado', fase_embarque: 'CREADO' };
+        const contenedores = (resConts || []).map(c => ({
+            id: c.id,
+            tipo: c.tipo,
+            capacidadTeu: c.capacidad_teu || 1,
+            pesoMaxTon: Number(c.peso_max_ton || 28),
+            volumenM3: Number(c.volumen_m3 || 33.2),
+            especificaciones: c.especificaciones || 'Carga general estandar',
+            base: Number(c.base || 1000)
+        }));
+        return {
+            id: buque.id,
+            buque: buque.nombre,
+            estado: buque.estado,
+            faseEmbarque: buque.fase_embarque || 'CREADO',
+            viajeCodigo: buque.viaje_codigo || 'VIAJE-001',
+            duracionSubastaMin: buque.duracion_subasta_min || 5,
+            duracionAduanasMin: buque.duracion_aduanas_min || 3,
+            finSubasta: buque.fin_subasta,
+            finAduanas: buque.fin_aduanas,
+            subastaIniciadaEn: buque.subasta_iniciada_en,
+            aduanasIniciadaEn: buque.aduanas_iniciada_en,
+            contenedores
+        };
+    } catch (e) {
+        return {
+            id: 'EMERALD-ACE',
+            buque: 'Emerald Ace',
+            estado: 'Atracado',
+            faseEmbarque: 'CREADO',
+            viajeCodigo: 'VIAJE-001',
+            duracionSubastaMin: 5,
+            duracionAduanasMin: 3,
+            contenedores: []
+        };
+    }
 }
 
 /**
@@ -336,41 +387,103 @@ export async function liberarPujaAduanera(pujaId, justificacion, auditor = 'Insp
  * Valida credenciales de usuario desde la tabla usuarios
  */
 export async function autenticarUsuarioBD(username, password) {
-    const rows = await sql`
-        SELECT id, username, password_hash, nombre, correo, rol, portal_permitido,
-               COALESCE(saldo, 3500.00)::float AS "saldo",
-               COALESCE(saldo_disponible, 3500.00)::float AS "saldoDisponible"
-        FROM usuarios
-        WHERE LOWER(username) = LOWER(${username})
-        LIMIT 1
-    `;
+    try {
+        const rows = await sql`
+            SELECT id, username, password_hash, nombre, correo, rol, portal_permitido,
+                   COALESCE(saldo, 3500.00)::float AS "saldo",
+                   COALESCE(saldo_disponible, 3500.00)::float AS "saldoDisponible"
+            FROM usuarios
+            WHERE LOWER(username) = LOWER(${username})
+            LIMIT 1
+        `;
 
-    if (rows.length === 0) return null;
-    const u = rows[0];
-    if (u.password_hash !== password) return null;
+        if (rows.length === 0) return null;
+        const u = rows[0];
+        if (u.password_hash !== password) return null;
 
-    return {
-        id: u.id,
-        username: u.username,
-        nombre: u.nombre,
-        correo: u.correo,
-        rol: u.rol,
-        portalPermitido: u.portal_permitido,
-        saldo: u.saldo,
-        saldoDisponible: u.saldoDisponible
-    };
+        return {
+            id: u.id,
+            username: u.username,
+            nombre: u.nombre,
+            correo: u.correo,
+            rol: u.rol,
+            portalPermitido: u.portal_permitido,
+            saldo: u.saldo,
+            saldoDisponible: u.saldoDisponible
+        };
+    } catch (err) {
+        return await autenticarUsuarioREST(username, password);
+    }
+}
+
+async function autenticarUsuarioREST(username, password) {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !supabaseKey) return null;
+    try {
+        const res = await fetch(`${supabaseUrl}/rest/v1/usuarios?username=ilike.${encodeURIComponent(username)}&limit=1`, {
+            headers: {
+                'apikey': supabaseKey,
+                'Authorization': `Bearer ${supabaseKey}`
+            }
+        });
+        const data = await res.json();
+        if (!data || data.length === 0) return null;
+        const u = data[0];
+        if (u.password_hash !== password) return null;
+        return {
+            id: u.id,
+            username: u.username,
+            nombre: u.nombre,
+            correo: u.correo,
+            rol: u.rol,
+            portalPermitido: u.portal_permitido,
+            saldo: u.saldo !== undefined ? Number(u.saldo) : 3500,
+            saldoDisponible: u.saldo_disponible !== undefined ? Number(u.saldo_disponible) : 3500
+        };
+    } catch (e) {
+        return null;
+    }
 }
 
 /**
  * Consulta el saldo actual y disponible de un usuario
  */
 export async function getSaldoUsuario(identificador) {
-    const rows = await sql`
-        SELECT COALESCE(saldo, 3500.00)::float AS "saldo", 
-               COALESCE(saldo_disponible, 3500.00)::float AS "saldoDisponible"
-        FROM usuarios
-        WHERE LOWER(username) = LOWER(${identificador}) OR LOWER(nombre) = LOWER(${identificador})
-        LIMIT 1
-    `;
-    return rows[0] || { saldo: 3500, saldoDisponible: 3500 };
+    try {
+        const rows = await sql`
+            SELECT COALESCE(saldo, 3500.00)::float AS "saldo", 
+                   COALESCE(saldo_disponible, 3500.00)::float AS "saldoDisponible"
+            FROM usuarios
+            WHERE LOWER(username) = LOWER(${identificador}) OR LOWER(nombre) = LOWER(${identificador})
+            LIMIT 1
+        `;
+        return rows[0] || { saldo: 3500, saldoDisponible: 3500 };
+    } catch (err) {
+        return await getSaldoUsuarioREST(identificador);
+    }
+}
+
+async function getSaldoUsuarioREST(identificador) {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !supabaseKey) return { saldo: 3500, saldoDisponible: 3500 };
+    try {
+        const res = await fetch(`${supabaseUrl}/rest/v1/usuarios?or=(username.ilike.${encodeURIComponent(identificador)},nombre.ilike.${encodeURIComponent(identificador)})&limit=1`, {
+            headers: {
+                'apikey': supabaseKey,
+                'Authorization': `Bearer ${supabaseKey}`
+            }
+        });
+        const data = await res.json();
+        if (data && data.length > 0) {
+            return {
+                saldo: Number(data[0].saldo || 3500),
+                saldoDisponible: Number(data[0].saldo_disponible || 3500)
+            };
+        }
+    } catch (e) {
+        // fallback
+    }
+    return { saldo: 3500, saldoDisponible: 3500 };
 }
