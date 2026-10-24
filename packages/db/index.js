@@ -30,9 +30,10 @@ if (!dbUrl) {
 }
 
 const cleanUrl = (dbUrl || '').replace(/\[([^\]]+)\]/, '$1');
+const isLocal = cleanUrl.includes('localhost') || cleanUrl.includes('127.0.0.1');
 
 export const sql = postgres(cleanUrl, {
-    ssl: 'require',
+    ssl: isLocal ? false : 'require',
     connect_timeout: 10,
     max: 10
 });
