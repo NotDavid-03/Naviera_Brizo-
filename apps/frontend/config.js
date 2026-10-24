@@ -1,22 +1,18 @@
-// Brizo Logistics - Configuracion Global de Conectividad (Local y Despliegue Web)
+// Brizo Logistics - Configuracion Global de Conectividad (Local, LAN y Tuneles Web)
 (function () {
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
-    // Deteccion de protocolo seguro (HTTPS -> WSS)
     const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const httpProto = window.location.protocol;
 
-    // Valores por defecto
-    const defaultApiSubastas = isLocalhost ? 'http://localhost:3001' : `${httpProto}//${window.location.hostname}:3001`;
-    const defaultWsSubastas = isLocalhost ? 'ws://localhost:3001/subasta-en-vivo' : `${wsProto}//${window.location.hostname}:3001/subasta-en-vivo`;
-    const defaultApiAduanas = isLocalhost ? 'http://localhost:3002' : `${httpProto}//${window.location.hostname}:3002`;
+    // Al unificar el frontend y los proxies en el mismo host/puerto (3000):
+    // Todo funciona de forma transparente tanto en localhost, como en LAN (192.168.x.x) y en tuneles publicos
+    const defaultApiSubastas = window.location.origin;
+    const defaultWsSubastas = `${wsProto}//${window.location.host}/subasta-en-vivo`;
+    const defaultApiAduanas = window.location.origin;
 
     window.BRIZO_CONFIG = {
         apiSubastas: localStorage.getItem('BRIZO_API_SUBASTAS') || defaultApiSubastas,
         wsSubastas: localStorage.getItem('BRIZO_WS_SUBASTAS') || defaultWsSubastas,
         apiAduanas: localStorage.getItem('BRIZO_API_ADUANAS') || defaultApiAduanas,
         
-        // Metodo para actualizar endpoints en despliegues en la nube (Vercel, Render, Railway, etc.)
         configurarEndpoints: function (apiSubastas, wsSubastas, apiAduanas) {
             if (apiSubastas) localStorage.setItem('BRIZO_API_SUBASTAS', apiSubastas);
             if (wsSubastas) localStorage.setItem('BRIZO_WS_SUBASTAS', wsSubastas);

@@ -80,20 +80,27 @@ pnpm install
 
 Iniciar los microservicios:
 
-- **Motor de Subastas:**
+- **Modo Servicio Unificado (Recomendado para local y acceso externo):**
   ```bash
-  pnpm start:subastas
+  pnpm start:service
   ```
-- **Modulo Aduanero SAT:**
-  ```bash
-  pnpm start:aduanas
-  ```
-- **Servidor Frontend:**
-  ```bash
-  pnpm start:frontend
-  ```
+  Inicia simultaneamente el motor de subastas, el modulo aduanero SAT y la puerta de enlace en el puerto `3000`.
+
+- **O bien, iniciar cada microservicio por separado:**
+  - Motor de Subastas: `pnpm start:subastas` (Puerto 3001)
+  - Modulo Aduanero SAT: `pnpm start:aduanas` (Puerto 3002)
+  - Servidor Frontend: `pnpm start:frontend` (Puerto 3000)
 
 Acceso al portal: `http://localhost:3000/index.html`
+
+### Conectar a Usuarios Externos (Internet sin abrir puertos)
+Con el servicio activo (`pnpm start:service`), ejecuta en otra terminal:
+```bash
+npx localtunnel --port 3000
+# o bien
+npx untun tunnel 3000
+```
+Comparte el enlace HTTPS resultante con los usuarios remotos.
 
 El directorio de credenciales para pruebas se encuentra documentado en `ACCESOS_USUARIOS.txt`.
 

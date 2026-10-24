@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "start": "node apps/api-subastas/index.js",
+    "start:service": "node scripts/start-local-service.mjs",
     "start:subastas": "node apps/api-subastas/index.js",
     "start:aduanas": "node apps/api-aduanas/index.js",
     "start:frontend": "node apps/frontend/server.js",
